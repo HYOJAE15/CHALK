@@ -44,29 +44,23 @@ def main():
     print("Number of test images: {}".format(len(test_images)))
 
     # loop through all the images
-    loop_through_images(train_images, target_path, window_size)
-    loop_through_images(val_images, target_path, window_size)
-    loop_through_images(test_images, target_path, window_size)
+    loop_through_images(train_images, target_path, window_size, dataset='train')
+    loop_through_images(val_images, target_path, window_size, dataset='val')
+    loop_through_images(test_images, target_path, window_size, dataset='test')
 
 
-def loop_through_images(image_list, target_path, window_size):
+def loop_through_images(image_list, target_path, window_size, dataset='train'):
     """
     Args: 
         image_list: list of images to loop through
         target_path: path to the target dataset,
         window_size: size of the window
+        dataset: name of the dataset
     """
     # check image_list is empty and pass 
     if len(image_list) == 0:
         return None 
-
-    # check train / val / test from the image path
-    if "train" in image_list[0]:
-        dataset = "train"
-    elif "val" in image_list[0]:
-        dataset = "val"
-    elif "test" in image_list[0]:
-        dataset = "test"
+    
     
     for image_path in image_list:
         label_path = image_path.replace("_leftImg8bit", "_gtFine_labelIds").replace("leftImg8bit", "gtFine")
@@ -75,8 +69,8 @@ def loop_through_images(image_list, target_path, window_size):
         image = imread(image_path)
         label = imread(label_path)
 
-        count_x = image.shape[1] // window_size
-        count_y = image.shape[0] // window_size
+        count_x = image.shape[1] // window_size + 1
+        count_y = image.shape[0] // window_size + 1
         window_count = (count_y,  count_x)
         windows = generateForNumberOfWindows(image, sw.DimOrder.HeightWidthChannel, window_count, 0)
 
@@ -95,8 +89,8 @@ def loop_through_images(image_list, target_path, window_size):
                 label_filename = os.path.basename(label_path)
                 
                 # save the images
-                image_filename = image_filename.replace("leftImg8bit.png", f"_{_y}_{_x}_leftImg8bit.png")
-                label_filename = label_filename.replace("gtFine_labelIds.png", f"_{_y}_{_x}_gtFine_labelIds.png")
+                image_filename = image_filename.replace("leftImg8bit.png", f"{_y}_{_x}_leftImg8bit.png")
+                label_filename = label_filename.replace("gtFine_labelIds.png", f"{_y}_{_x}_gtFine_labelIds.png")
 
                 # destination path of the image
                 image_dest_path = os.path.join(target_path, "leftImg8bit", dataset, image_filename)

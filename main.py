@@ -20,6 +20,10 @@ import json
 
 import numpy as np
 
+os.environ['OPENCV_IO_MAX_IMAGE_PIXELS'] = pow(2,40).__str__()
+
+import mmcv
+
 os.environ["QT_FONT_DPI"] = "96" # FIX Problem for High DPI and Scale above 100%
 
 from PySide6.QtCore import *

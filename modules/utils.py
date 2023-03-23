@@ -55,6 +55,29 @@ def cvtArrayToQImage(array: np.array) -> QImage:
     elif len(array.shape) == 2 :
         h, w = array.shape
         return QImage(array.data, w, h, QImage.Format_Mono)
+    
+def cvtPixmapToArray(pixmap):
+    """Convert a QPixmap to a numpy array
+    Args: 
+        pixmap (QPixmap): The QPixmap to convert
+    
+    Returns:
+        img (np.array): The converted QPixmap
+    """
+    
+    ## Get the size of the current pixmap
+    size = pixmap.size()
+    h = size.width()
+    w = size.height()
+
+    ## Get the QImage Item and convert it to a byte string
+    qimg = pixmap.toImage()
+    byte_str = qimg.bits().tobytes()
+
+    ## Using the np.frombuffer function to convert the byte string into an np array
+    img = np.frombuffer(byte_str, dtype=np.uint8).reshape((w,h,4))
+
+    return img
 
 @njit
 def mapLabelToColorMap(label: np.array, 

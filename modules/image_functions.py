@@ -16,16 +16,12 @@ from .ui_main import Ui_MainWindow
 from .ui_functions import UIFunctions
 from .ui_brush_menu import Ui_BrushMenu
 from .app_settings import Settings
+from .dnn_functions import DNNFunctions
 
-from .utils import imread, imwrite, cvtArrayToQImage, convertLabelToColorMap
+from .utils import imread, cvtArrayToQImage, cvtPixmapToArray, convertLabelToColorMap
 
 from timeit import default_timer as timer
 from numba import njit
-
-import slidingwindow as sw 
-
-import math
-import shutil
 
 
 
@@ -211,8 +207,9 @@ class ThumbnailGridWindow(QMainWindow, UIFunctions):
             print('Mouse click: RIGHT CLICK')
 
 
-class ImageFunctions(object):
+class ImageFunctions(DNNFunctions):
     def __init__(self):
+        DNNFunctions.__init__(self)
 
         if not hasattr(self, 'ui'):
             QMainWindow.__init__(self)
@@ -221,7 +218,7 @@ class ImageFunctions(object):
             
         self.ui.treeView.clicked.connect(self.openImage)
         self.fileModel = QFileSystemModel()
-        self.alpha = 100
+        self.alpha = 50
         self.scale = 1
         self.oldPos = None
         self.brush_class = 1
@@ -248,7 +245,7 @@ class ImageFunctions(object):
         """
         Autolabel tool 
         """
-        self.ui.autoLabelButton.clicked.connect(self.autoLabel)
+        self.ui.autoLabelButton.clicked.connect(self.checkAutoLabelButton)
         self.use_autolabel = False
 
     
@@ -262,9 +259,12 @@ class ImageFunctions(object):
             self.use_brush = False 
         
         
-    
     def openBrushMenu(self):
         self.BrushMenu.show()
+        self.use_brush = True
+
+        if self.use_autolabel:
+            self.use_autolabel = False
 
     def changeBrushSize(self, value):
         self.brushSize = value
@@ -410,18 +410,75 @@ class ImageFunctions(object):
 
 
     def brushPressPoint(self, event):
+        """
+        Get the brush class and the point where the mouse is pressed
+        """
 
+        # Get the brush class
         self.brush_class = self.ui.classList.currentRow()
 
         event_global = self.ui.mainImageViewer.mapFromGlobal(event.globalPos())
-
         x, y = getScaledPoint_v2(event_global, self.scale)
 
         self.x = x
         self.y = y
+
+        if self.use_autolabel : 
+            self.useAutoLabel(event)
         
 
+    def useAutoLabel(self, event):
+
+        # img = self.pixmap.toImage()
+
+        
+        # width, height = img.width(), img.height()
+        # buffer = img.bits().asstring(width * height * 4)
+        # img = np.frombuffer(buffer, dtype=np.uint8).reshape((height, width, 4))
+
+        img = cvtPixmapToArray(self.pixmap)
+
+        min_x = self.x - 128
+        min_y = self.y - 128
+        max_x = self.x + 128
+        max_y = self.y + 128
+
+        if min_x < 0 :
+            min_x = 0
+        if min_y < 0 :
+            min_y = 0
+
+        if max_x > img.shape[1] :
+            max_x = img.shape[1]
+        
+        if max_y > img.shape[0] :
+            max_y = img.shape[0]
+
+        img = img[min_y:max_y, min_x:max_x, :]
+        
+        result = self.dnn_inference(img)
+
+        # update label with result
+
+        idx = np.argwhere(result == 1)
+        y_idx, x_idx = idx[:, 0], idx[:, 1]
+        x_idx = x_idx + min_x
+        y_idx = y_idx + min_y
+
+        self.label[y_idx, x_idx] = self.brush_class
+        self.colormap[y_idx, x_idx, :3] = self.label_palette[self.brush_class]
+
+        
+
+
     def brushMoveEvent(self, event):
+
+        if self.use_brush : 
+            self.useBrush(event)
+
+
+
+    def useBrush(self, event):
 
         event_global = self.ui.mainImageViewer.mapFromGlobal(event.globalPos())
 
