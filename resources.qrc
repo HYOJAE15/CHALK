@@ -6,6 +6,7 @@
   </qresource>
   <qresource prefix="icons">
     <file>images/icons/icon-open-project.png</file>
+    <file>images/icons/icon-enhancement.png</file>
     <file>images/icons/icon-ai.png</file>
     <file>images/icons/icon_rectangle-white.png</file>
     <file>images/icons/icon_circle-white.png</file>
