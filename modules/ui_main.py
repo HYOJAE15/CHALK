@@ -1905,22 +1905,22 @@ class Ui_MainWindow(object):
 
         self.gridLayout_3.addWidget(self.brushButton, 0, 0, 1, 1)
 
-        self.eraserButton = QPushButton(self.toolBoxButtonFrame)
-        self.eraserButton.setObjectName(u"eraserButton")
-        sizePolicy1.setHeightForWidth(self.eraserButton.sizePolicy().hasHeightForWidth())
-        self.eraserButton.setSizePolicy(sizePolicy1)
-        self.eraserButton.setMinimumSize(QSize(0, 30))
-        self.eraserButton.setFont(font)
-        self.eraserButton.setCursor(QCursor(Qt.PointingHandCursor))
-        self.eraserButton.setStyleSheet(u".QPushButton { background-color: rgb(52, 59, 72); border: none;  border-radius: 5px; }\n"
+        self.grabCutButton = QPushButton(self.toolBoxButtonFrame)
+        self.grabCutButton.setObjectName(u"grabCutButton")
+        sizePolicy1.setHeightForWidth(self.grabCutButton.sizePolicy().hasHeightForWidth())
+        self.grabCutButton.setSizePolicy(sizePolicy1)
+        self.grabCutButton.setMinimumSize(QSize(0, 30))
+        self.grabCutButton.setFont(font)
+        self.grabCutButton.setCursor(QCursor(Qt.PointingHandCursor))
+        self.grabCutButton.setStyleSheet(u".QPushButton { background-color: rgb(52, 59, 72); border: none;  border-radius: 5px; }\n"
 ".QPushButton:hover { background-color: rgb(44, 49, 57); border-style: solid; border-radius: 4px; }\n"
 ".QPushButton:pressed { background-color: rgb(23, 26, 30); border-style: solid; border-radius: 4px; }\n"
 "")
         icon9 = QIcon()
         icon9.addFile(u":/icons/images/icons/icon-eraser.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.eraserButton.setIcon(icon9)
+        self.grabCutButton.setIcon(icon9)
 
-        self.gridLayout_3.addWidget(self.eraserButton, 0, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.grabCutButton, 0, 1, 1, 1)
 
         self.autoLabelButton = QPushButton(self.toolBoxButtonFrame)
         self.autoLabelButton.setObjectName(u"autoLabelButton")
@@ -1939,22 +1939,22 @@ class Ui_MainWindow(object):
 
         self.gridLayout_3.addWidget(self.autoLabelButton, 1, 0, 1, 1)
 
-        self.zoomButton = QPushButton(self.toolBoxButtonFrame)
-        self.zoomButton.setObjectName(u"zoomButton")
-        sizePolicy1.setHeightForWidth(self.zoomButton.sizePolicy().hasHeightForWidth())
-        self.zoomButton.setSizePolicy(sizePolicy1)
-        self.zoomButton.setMinimumSize(QSize(0, 30))
-        self.zoomButton.setFont(font)
-        self.zoomButton.setCursor(QCursor(Qt.PointingHandCursor))
-        self.zoomButton.setStyleSheet(u".QPushButton { background-color: rgb(52, 59, 72); border: none;  border-radius: 5px; }\n"
+        self.enhancementButton = QPushButton(self.toolBoxButtonFrame)
+        self.enhancementButton.setObjectName(u"enhancementButton")
+        sizePolicy1.setHeightForWidth(self.enhancementButton.sizePolicy().hasHeightForWidth())
+        self.enhancementButton.setSizePolicy(sizePolicy1)
+        self.enhancementButton.setMinimumSize(QSize(0, 30))
+        self.enhancementButton.setFont(font)
+        self.enhancementButton.setCursor(QCursor(Qt.PointingHandCursor))
+        self.enhancementButton.setStyleSheet(u".QPushButton { background-color: rgb(52, 59, 72); border: none;  border-radius: 5px; }\n"
 ".QPushButton:hover { background-color: rgb(44, 49, 57); border-style: solid; border-radius: 4px; }\n"
 ".QPushButton:pressed { background-color: rgb(23, 26, 30); border-style: solid; border-radius: 4px; }\n"
 "")
         icon11 = QIcon()
-        icon11.addFile(u":/icons/images/icons/cil-zoom-in.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.zoomButton.setIcon(icon11)
+        icon11.addFile(u":/icons/images/icons/icon-enhancement.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.enhancementButton.setIcon(icon11)
 
-        self.gridLayout_3.addWidget(self.zoomButton, 1, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.enhancementButton, 1, 1, 1, 1)
 
         self.frame_2 = QFrame(self.rightToolBox)
         self.frame_2.setObjectName(u"frame_2")
@@ -2163,7 +2163,7 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(shortcut)
         self.btn_add_new_project.setText(QCoreApplication.translate("MainWindow", u"Add New Project", None))
         self.btn_open_project.setText(QCoreApplication.translate("MainWindow", u"Open Project", None))
-        self.titleRightInfo.setText(QCoreApplication.translate("MainWindow", u"CHALK: Concrete Damage Automatic Labeling ToolKit ", None))
+        self.titleRightInfo.setText(QCoreApplication.translate("MainWindow", u"CHALK: Concrete Damage Automatic Labeling ToolKit", None))
 #if QT_CONFIG(tooltip)
         self.openRightToolBox.setToolTip(QCoreApplication.translate("MainWindow", u"Settings", None))
 #endif // QT_CONFIG(tooltip)
@@ -2252,9 +2252,9 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.extraCloseColumnBtn_5.setText("")
         self.brushButton.setText("")
-        self.eraserButton.setText("")
+        self.grabCutButton.setText("")
         self.autoLabelButton.setText("")
-        self.zoomButton.setText("")
+        self.enhancementButton.setText("")
         self.btn_message.setText(QCoreApplication.translate("MainWindow", u"Message", None))
         self.btn_print.setText(QCoreApplication.translate("MainWindow", u"Print", None))
         self.btn_logout.setText(QCoreApplication.translate("MainWindow", u"Logout", None))

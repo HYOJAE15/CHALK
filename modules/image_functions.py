@@ -23,6 +23,8 @@ from .utils import imread, cvtArrayToQImage, cvtPixmapToArray, convertLabelToCol
 from timeit import default_timer as timer
 from numba import njit
 
+import skimage.measure
+import skimage.filters
 
 
 @njit(fastmath=True)
@@ -243,10 +245,114 @@ class ImageFunctions(DNNFunctions):
 
 
         """
-        Autolabel tool 
+        Autolabel Tool
         """
         self.ui.autoLabelButton.clicked.connect(self.checkAutoLabelButton)
         self.use_autolabel = False
+
+        """
+        Label Enhancement Tool
+        """
+        self.ui.enhancementButton.clicked.connect(self.checkEnhancementButton)
+        self.use_enhancement = False
+
+        """
+        Label GrapCut Tool
+        """
+
+        self.ui.grabCutButton.clicked.connect(self.checkGrabCutButton)
+        self.use_grabcut = False
+
+    
+    def useEnhancement(self, event):
+        """
+        Label Enhancement Tool
+        """
+        
+        event_global = self.ui.mainImageViewer.mapFromGlobal(event.globalPos())
+
+        x, y = getScaledPoint_v2(event_global, self.scale)
+        
+        if (self.x != x) or (self.y != y) : 
+
+            if self.x > x :
+                min_x = x
+                max_x = self.x
+            else :
+                min_x = self.x
+                max_x = x
+
+            if self.y > y :
+                min_y = y
+                max_y = self.y
+            else :
+                min_y = self.y
+                max_y = y
+    
+            print(min_y, min_x, max_y, max_x)
+
+            # get the region of interest
+            img = cvtPixmapToArray(self.pixmap)
+            img_roi = img[min_y:max_y, min_x:max_x, :3]
+            label_roi = self.label[min_y:max_y, min_x:max_x]
+            label_roi = label_roi.astype(np.uint8)
+
+            label_roi = self.applyDenseCRF(img_roi, label_roi)
+
+            self.label[min_y:max_y, min_x:max_x] = label_roi
+
+            # update colormap
+            self.updateColorMap()
+
+        self.x = x
+        self.y = y
+        
+    def enhanceLabel(self):
+        """
+        Label Enhancement Tool
+        """
+        # get the current image
+        img = cvtPixmapToArray(self.pixmap)
+
+        # get binary image of current label
+        current_label = self.label == self.brush_class
+        print(self.brush_class)
+
+        # loop through each object in the label
+        labeled = skimage.measure.label(current_label)
+
+        for region in skimage.measure.regionprops(labeled):
+
+            # get the bounding box coordinates
+            min_y, min_x, max_y, max_x = region.bbox
+            print(min_y, min_x, max_y, max_x)
+
+            # get the region of interest
+            img_roi = img[min_y:max_y, min_x:max_x, :3]
+            label_roi = current_label[min_y:max_y, min_x:max_x]
+            label_roi = label_roi.astype(np.uint8)
+
+            # print the shape of the image
+            print(img_roi.shape)
+            print(label_roi.shape)
+            print(label_roi.dtype)
+
+            # run the enhancement algorithm
+            label_roi = self.applyDenseCRF(img_roi, label_roi)
+
+            # remain only the largest object
+            label_roi = skimage.measure.label(label_roi)
+            label_roi = label_roi == np.argmax(np.bincount(label_roi.flat)[1:]) + 1
+
+            # smooth the label
+            label_roi = skimage.morphology.binary_closing(label_roi, skimage.morphology.square(3))
+
+            # update the label
+            self.label[min_y:max_y, min_x:max_x] = label_roi * self.brush_class
+
+
+        # update colormap
+        self.updateColorMap()
 
     
     def checkAutoLabelButton(self):
@@ -257,14 +363,57 @@ class ImageFunctions(DNNFunctions):
 
         if self.use_brush:
             self.use_brush = False 
-        
-        
-    def openBrushMenu(self):
-        self.BrushMenu.show()
-        self.use_brush = True
+
+        if self.use_enhancement:
+            self.use_enhancement = False
+
+
+    def checkEnhancementButton(self):
+        """
+        Enable or disable enhancement button
+        """
+        self.use_enhancement = True
+
+        if self.use_brush:
+            self.use_brush = False
 
         if self.use_autolabel:
             self.use_autolabel = False
+
+
+    def checkBrushButton(self):
+        """
+        Enabale or disable brush
+        """
+        self.use_brush = True
+
+        if self.use_autolabel == True :
+            self.use_autolabel = False 
+
+        if self.use_enhancement == True :
+            self.use_enhancement = False
+
+
+    def checkGrabCutButton(self):
+        """
+        Enable or disable grabcut button
+        """
+        self.use_grabcut = True
+
+        if self.use_brush:
+            self.use_brush = False
+
+        if self.use_autolabel:
+            self.use_autolabel = False
+
+        if self.use_enhancement:
+            self.use_enhancement = False
+
+        
+    def openBrushMenu(self):
+        self.BrushMenu.show()
+        
+        self.checkBrushButton()
 
     def changeBrushSize(self, value):
         self.brushSize = value
@@ -323,10 +472,10 @@ class ImageFunctions(DNNFunctions):
             img_gt_filename = img_filename.replace( '_leftImg8bit.png', '_gtFine_labelIds.png')
             gt = np.zeros((temp_img.shape[0], temp_img.shape[1]), dtype=np.uint8)
 
-            is_success, org_img = cv2.imencode(".png", temp_img)
+            _, org_img = cv2.imencode(".png", temp_img)
             org_img.tofile(os.path.join(img_save_folder, img_filename))
 
-            is_success, gt_img = cv2.imencode(".png", gt)
+            _, gt_img = cv2.imencode(".png", gt)
             gt_img.tofile(os.path.join(img_label_folder, img_gt_filename))
 
         self.resetTreeView(refreshIndex=True)
@@ -389,26 +538,83 @@ class ImageFunctions(DNNFunctions):
         self.scale = self.ui.scrollAreaImage.height() / self.label.shape[0]
         self.ui.mainImageViewer.setFixedSize(self.scale * self.color_pixmap.size())
         self.ui.mainImageViewer.fitInView(self.pixmap_item)
-
-    
-    def brushButton(self):
-        """
-        Enabale or disable brush
-        """
-        self.use_brush = True
-
-        if self.use_autolabel == True :
-            self.use_autolabel = False 
         
+    def useGrabCut(self, event):
+
+        """
+        Label Enhancement Tool
+        """
+        import cv2
+        
+        event_global = self.ui.mainImageViewer.mapFromGlobal(event.globalPos())
+
+        x, y = getScaledPoint_v2(event_global, self.scale)
+        
+        if (self.x != x) or (self.y != y) : 
+
+            if self.x > x :
+                min_x = x
+                max_x = self.x
+            else :
+                min_x = self.x
+                max_x = x
+
+            if self.y > y :
+                min_y = y
+                max_y = self.y
+            else :
+                min_y = self.y
+                max_y = y
+    
+            print(min_y, min_x, max_y, max_x)
+
+            # get the region of interest
+            img = cvtPixmapToArray(self.pixmap)
+            img_roi = img[min_y:max_y, min_x:max_x, :3]
+            label_roi = self.label[min_y:max_y, min_x:max_x]
+            label_roi = label_roi.astype(np.uint8)
+
+            mask = label_roi == self.brush_class
+            
+            bgdModel = np.zeros((1,65),np.float64)
+            fgdModel = np.zeros((1,65),np.float64)
+
+            mask, bgdModel, fgdModel = cv2.grabCut(img_roi, mask, None, bgdModel, fgdModel,5, cv2.GC_INIT_WITH_MASK)
+
+            mask = np.where((mask==2)|(mask==0),0,1).astype('uint8')
+
+            self.label[min_y:max_y, min_x:max_x] = mask * self.brush_class
+
+            # update colormap
+            self.updateColorMap()
+
+        self.x = x
+        self.y = y
+
         
     def brushReleasePoint(self, event):
 
-        self.color_pixmap = QPixmap(cvtArrayToQImage(self.colormap))
+        if self.use_enhancement :
+            self.useEnhancement(event)
 
-        self.color_pixmap_item.setPixmap(QPixmap())
-        self.color_pixmap_item.setPixmap(self.color_pixmap)
+        if self.use_grabcut : 
+            self.useGrabCut(event)
 
+        else: 
+            self.color_pixmap = QPixmap(cvtArrayToQImage(self.colormap))
+            self.color_pixmap_item.setPixmap(QPixmap())
+            self.color_pixmap_item.setPixmap(self.color_pixmap)
+            
 
+    
+    def brushMoveEvent(self, event):
+
+        if self.use_brush : 
+            self.useBrush(event)
+
+        
+
+    
     def brushPressPoint(self, event):
         """
         Get the brush class and the point where the mouse is pressed
@@ -424,10 +630,10 @@ class ImageFunctions(DNNFunctions):
         self.y = y
 
         if self.use_autolabel : 
-            self.useAutoLabel(event)
+            self.useAutoLabel()
         
 
-    def useAutoLabel(self, event):
+    def useAutoLabel(self):
 
         # img = self.pixmap.toImage()
 
@@ -456,7 +662,7 @@ class ImageFunctions(DNNFunctions):
 
         img = img[min_y:max_y, min_x:max_x, :]
         
-        result = self.dnn_inference(img)
+        result = self.dnn_inference(img, do_crf=False)
 
         # update label with result
 
@@ -468,14 +674,15 @@ class ImageFunctions(DNNFunctions):
         self.label[y_idx, x_idx] = self.brush_class
         self.colormap[y_idx, x_idx, :3] = self.label_palette[self.brush_class]
 
-        
 
-
-    def brushMoveEvent(self, event):
-
-        if self.use_brush : 
-            self.useBrush(event)
-
+    def updateColorMap(self):
+        """
+        Update the color map
+        """
+        self.colormap = convertLabelToColorMap(self.label, self.label_palette, self.alpha)
+        self.color_pixmap = QPixmap(cvtArrayToQImage(self.colormap))
+        self.color_pixmap_item.setPixmap(QPixmap())
+        self.color_pixmap_item.setPixmap(self.color_pixmap)
 
 
     def useBrush(self, event):
