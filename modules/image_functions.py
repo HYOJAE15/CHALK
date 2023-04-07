@@ -5,13 +5,12 @@ os.environ['OPENCV_IO_MAX_IMAGE_PIXELS'] = pow(2,40).__str__()
 import cv2
 import numpy as np
 
-from PySide6.QtCore import Qt, QThreadPool
-from PySide6.QtGui import  QPixmap, QColor, QPainter
+from PySide6.QtCore import Qt
+from PySide6.QtGui import  QPixmap
 from PySide6.QtWidgets import (
-    QMainWindow, QFileSystemModel, QLabel, QGraphicsScene, QFileDialog, QGridLayout, QWidget
+    QMainWindow, QFileSystemModel, QGraphicsScene, QFileDialog
 ) 
 
-from .ui_thumbnail_window import Ui_ThumbnailWindow
 from .ui_main import Ui_MainWindow
 from .ui_functions import UIFunctions
 from .ui_brush_menu import Ui_BrushMenu
@@ -19,123 +18,12 @@ from .app_settings import Settings
 from .dnn_functions import DNNFunctions
 
 from .utils import imread, cvtArrayToQImage, cvtPixmapToArray, convertLabelToColorMap
-
-from timeit import default_timer as timer
-from numba import njit
+from .utils_img import getScaledPoint, getCoordBTWTwoPoints, applyBrushSize, readImageToPixmap
 
 import skimage.measure
 import skimage.filters
 
-
-@njit(fastmath=True)
-def _applyBrushSize(brushSize):
-
-    width = int(brushSize // 2)
-
-    _X, _Y = [], []
-
-    if brushSize % 2 == 0:
-        for _x in range(-width, width):
-            for _y in range(-width,width):
-                _X.append(_x)
-                _Y.append(_y)
-    else:
-        for _x in range(-width, width+1):
-            for _y in range(-width, width+1):
-                _X.append(_x)
-                _Y.append(_y)
-
-    return _X, _Y, width
-
-
-def applyBrushSize(X, Y, brushSize, max_x, max_y, brushType = 'rectangle'): 
-
-    _X, _Y, width = _applyBrushSize(brushSize)
-    
-    if brushType == 'circle' :
-        
-        _X, _Y = convetRectangleToCircle(_X, _Y, width)
-        
-        # dist = [np.sqrt(_x**2 + _y**2) for _x, _y in zip(_Y, _X)]
-        # _Y =  [_y for idx, _y in enumerate(_Y) if dist[idx] < width]
-        # _X = [_x for idx, _x in enumerate(_X) if dist[idx] < width]
-        # _X, _Y = np.array(_X), np.array(_Y)
-
-    return_x = []
-    return_y = []
-    
-    for x, y in zip(X, Y):
-        _x = x + _X
-        _y = y + _Y
-
-        return_x += _x.tolist()
-        return_y += _y.tolist()
-
-    return_x = np.array(return_x)
-    return_y = np.array(return_y)
-
-    return_x = np.clip(return_x, 0, max_x-1)
-    return_y = np.clip(return_y, 0, max_y-1)
-
-    _return = np.vstack((return_x, return_y))
-    _return = np.unique(_return, axis=1)
-    return_x , return_y = _return[0, :], _return[1, :]
-    
-    return return_x, return_y
-
-@njit(fastmath=True)
-def convetRectangleToCircle(X, Y, width):
-    
-    dist = [np.sqrt(_x**2 + _y**2) for _x, _y in zip(Y, X)]
-    Y =  [_y for idx, _y in enumerate(Y) if dist[idx] < width]
-    X = [_x for idx, _x in enumerate(X) if dist[idx] < width]
-    return np.array(X), np.array(Y)
-
-@njit(fastmath=True)
-def fast_coloring(X, Y, array, label_palette, brush_class, alpha = 50):
-    # print(X, Y)
-    
-    for x, y in zip(X, Y): 
-        array[y, x, :3] = label_palette[brush_class]
-        array[y, x, 3] = alpha
-
-    return array 
-
-
-def getScaledPoint_v2(event, scale):
-
-    # scaled_event_pos = QPoint(round(event.pos().x() / scale), round(event.pos().y() / scale))
-    x, y = round(event.x() / scale), round(event.y() / scale)
-
-    return x, y 
-
-def points_between(x1, y1, x2, y2):
-    """
-    coordinate between two points
-    """
-
-    d0 = x2 - x1
-    d1 = y2 - y1
-    
-    count = max(abs(d1)+1, abs(d0)+1)
-
-    if d0 == 0:
-        return (
-            np.full(count, x1),
-            np.round(np.linspace(y1, y2, count)).astype(np.int32)
-        )
-
-    if d1 == 0:
-        return (
-            np.round(np.linspace(x1, x2, count)).astype(np.int32),
-            np.full(count, y1),  
-        )
-
-    return (
-        np.round(np.linspace(x1, x2, count)).astype(np.int32),
-        np.round(np.linspace(y1, y2, count)).astype(np.int32)
-    )
-
+import copy
 
 class BrushMenuWindow(QMainWindow, UIFunctions):
     def __init__(self):
@@ -149,65 +37,11 @@ class BrushMenuWindow(QMainWindow, UIFunctions):
 
         self.uiDefinitions()
 
-        # RESIZE EVENTS
-    # ///////////////////////////////////////////////////////////////
     def resizeEvent(self, event):
-        # Update Size Grips
         self.resize_grips()
 
-    # MOUSE CLICK EVENTS
-    # ///////////////////////////////////////////////////////////////
     def mousePressEvent(self, event):
-        # SET DRAG POS WINDOW
         self.dragPos = event.globalPos()
-
-        # PRINT MOUSE EVENTS
-        if event.buttons() == Qt.LeftButton:
-            print('Mouse click: LEFT CLICK')
-        if event.buttons() == Qt.RightButton:
-            print('Mouse click: RIGHT CLICK')
-
-
-class ThumbnailGridWindow(QMainWindow, UIFunctions):
-    def __init__(self):
-        QMainWindow.__init__(self)
-
-        self.ui = Ui_ThumbnailWindow()
-        self.ui.setupUi(self)
-        self.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
-
-        self.settings = Settings()
-
-        self.uiDefinitions()
-
-    def resizeEvent(self, event):
-        # Update Size Grips
-        self.resize_grips()
-
-    # MOUSE CLICK EVENTS
-    # ///////////////////////////////////////////////////////////////
-    def mousePressEvent(self, event):
-        # SET DRAG POS WINDOW
-        self.dragPos = event.globalPos()
-
-        # PRINT MOUSE EVENTS
-        if event.buttons() == Qt.LeftButton:
-            print('Mouse click: LEFT CLICK')
-            event_global = self.ui.pagesContainer.mapFromGlobal(event.globalPos())
-            print(event_global.x(), event_global.y())
-
-            
-            height = self.ui.pagesContainer.height()
-            row_height = height // self.ui.gridLayout.rowCount()
-
-            width = self.ui.pagesContainer.width()
-            col_width = width // self.ui.gridLayout.columnCount()
-
-            
-            self.ui.gridLayout.itemAtPosition()
-        if event.buttons() == Qt.RightButton:
-            print('Mouse click: RIGHT CLICK')
-
 
 class ImageFunctions(DNNFunctions):
     def __init__(self):
@@ -217,61 +51,72 @@ class ImageFunctions(DNNFunctions):
             QMainWindow.__init__(self)
             self.ui = Ui_MainWindow()
             self.ui.setupUi(self)
+
+        global mainWidgets
+        mainWidgets = self.ui
             
-        self.ui.treeView.clicked.connect(self.openImage)
+        mainWidgets.treeView.clicked.connect(self.openImage)
         self.fileModel = QFileSystemModel()
         self.alpha = 50
         self.scale = 1
         self.oldPos = None
         self.brush_class = 1
         
-        self.ui.mainImageViewer.mouseMoveEvent = self.brushMoveEvent
-        self.ui.mainImageViewer.mousePressEvent = self.brushPressPoint
-        self.ui.mainImageViewer.mouseReleaseEvent = self.brushReleasePoint
+        mainWidgets.mainImageViewer.mouseMoveEvent = self._mouseMoveEvent
+        mainWidgets.mainImageViewer.mousePressEvent = self._mousePressPoint
+        mainWidgets.mainImageViewer.mouseReleaseEvent = self._mouseReleasePoint
+        mainWidgets.mainImageViewer.mouseDoubleClickEvent = self._mouseDoubleClick
 
-        self.ControlKey = False
-
-        self.brushSize = 10
-
-        self.ui.brushButton.clicked.connect(self.openBrushMenu)
+        mainWidgets.brushButton.clicked.connect(self.openBrushMenu)
 
         self.BrushMenu = BrushMenuWindow()
         self.BrushMenu.ui.brushSizeSlider.valueChanged.connect(self.changeBrushSize)
 
-        self.ui.addImageButton.clicked.connect(self.addNewImage)
-        self.ui.deleteImageButton.clicked.connect(self.deleteImage)
+        mainWidgets.addImageButton.clicked.connect(self.addNewImage)
+        mainWidgets.deleteImageButton.clicked.connect(self.deleteImage)
 
         self.use_brush = True
-
+        self.sam_mode = False
 
         """
         Autolabel Tool
         """
-        self.ui.autoLabelButton.clicked.connect(self.checkAutoLabelButton)
+        mainWidgets.autoLabelButton.clicked.connect(self.checkAutoLabelButton)
         self.use_autolabel = False
 
         """
         Label Enhancement Tool
         """
-        self.ui.enhancementButton.clicked.connect(self.checkEnhancementButton)
-        self.use_enhancement = False
+        mainWidgets.enhancementButton.clicked.connect(self.checkEnhancementButton)
+        self.use_refinement = False
 
         """
         Label GrapCut Tool
         """
 
-        self.ui.grabCutButton.clicked.connect(self.checkGrabCutButton)
+        mainWidgets.grabCutButton.clicked.connect(self.checkGrabCutButton)
         self.use_grabcut = False
 
+        """
+        Variables
+        """
+        self.ControlKey = False
+        self.brushSize = 10
+
+        self.input_point_list = []
+        self.input_label_list = []
+
+        self.sam_y_idx = None
+        self.sam_x_idx = None
     
     def useEnhancement(self, event):
         """
         Label Enhancement Tool
         """
         
-        event_global = self.ui.mainImageViewer.mapFromGlobal(event.globalPos())
+        event_global = mainWidgets.mainImageViewer.mapFromGlobal(event.globalPos())
 
-        x, y = getScaledPoint_v2(event_global, self.scale)
+        x, y = getScaledPoint(event_global, self.scale)
         
         if (self.x != x) or (self.y != y) : 
 
@@ -288,8 +133,6 @@ class ImageFunctions(DNNFunctions):
             else :
                 min_y = self.y
                 max_y = y
-    
-            print(min_y, min_x, max_y, max_x)
 
             # get the region of interest
             img = cvtPixmapToArray(self.pixmap)
@@ -316,7 +159,6 @@ class ImageFunctions(DNNFunctions):
 
         # get binary image of current label
         current_label = self.label == self.brush_class
-        print(self.brush_class)
 
         # loop through each object in the label
         labeled = skimage.measure.label(current_label)
@@ -325,17 +167,11 @@ class ImageFunctions(DNNFunctions):
 
             # get the bounding box coordinates
             min_y, min_x, max_y, max_x = region.bbox
-            print(min_y, min_x, max_y, max_x)
 
             # get the region of interest
             img_roi = img[min_y:max_y, min_x:max_x, :3]
             label_roi = current_label[min_y:max_y, min_x:max_x]
             label_roi = label_roi.astype(np.uint8)
-
-            # print the shape of the image
-            print(img_roi.shape)
-            print(label_roi.shape)
-            print(label_roi.dtype)
 
             # run the enhancement algorithm
             label_roi = self.applyDenseCRF(img_roi, label_roi)
@@ -350,69 +186,62 @@ class ImageFunctions(DNNFunctions):
             # update the label
             self.label[min_y:max_y, min_x:max_x] = label_roi * self.brush_class
 
-
         # update colormap
         self.updateColorMap()
 
-    
+    def set_button_state(self, use_autolabel=False, use_refinement=False, use_brush=False, use_grabcut=False):
+        """
+        Set the state of the buttons
+        """
+        self.use_autolabel = use_autolabel
+        self.use_refinement = use_refinement
+        self.use_brush = use_brush
+        self.use_grabcut = use_grabcut
+
+        mainWidgets.brushButton.setChecked(use_brush)
+        mainWidgets.autoLabelButton.setChecked(use_autolabel)
+        mainWidgets.enhancementButton.setChecked(use_refinement)
+        mainWidgets.grabCutButton.setChecked(use_grabcut)
+
+
     def checkAutoLabelButton(self):
         """
         Enable or disable auto label button
         """
-        self.use_autolabel = True
+        self.set_button_state(use_autolabel=True)
+        print("self.brush_class", self.brush_class)
 
-        if self.use_brush:
-            self.use_brush = False 
-
-        if self.use_enhancement:
-            self.use_enhancement = False
-
+        if self.brush_class == 1:
+            self.load_mmseg(self.mmseg_config, self.mmseg_checkpoint)
+        else:
+            self.load_sam(self.sam_checkpoint)
 
     def checkEnhancementButton(self):
         """
         Enable or disable enhancement button
         """
-        self.use_enhancement = True
-
-        if self.use_brush:
-            self.use_brush = False
-
-        if self.use_autolabel:
-            self.use_autolabel = False
+        self.set_button_state(use_refinement=True)
 
 
     def checkBrushButton(self):
         """
         Enabale or disable brush
         """
-        self.use_brush = True
-
-        if self.use_autolabel == True :
-            self.use_autolabel = False 
-
-        if self.use_enhancement == True :
-            self.use_enhancement = False
+        self.set_button_state(use_brush=True)
 
 
     def checkGrabCutButton(self):
         """
         Enable or disable grabcut button
         """
-        self.use_grabcut = True
-
-        if self.use_brush:
-            self.use_brush = False
-
-        if self.use_autolabel:
-            self.use_autolabel = False
-
-        if self.use_enhancement:
-            self.use_enhancement = False
+        self.set_button_state(use_grabcut=True)
 
         
     def openBrushMenu(self):
+        """
+        Open brush menu
+        """
         self.BrushMenu.show()
-        
         self.checkBrushButton()
 
     def changeBrushSize(self, value):
@@ -421,15 +250,15 @@ class ImageFunctions(DNNFunctions):
 
 
     def deleteImage(self, event):
-        self.currentIndex = self.ui.treeView.currentIndex().data(QFileSystemModel.FilePathRole)
-        self.imgFolderPath, filename = os.path.split(self.currentIndex)
+        self.currentIndex = mainWidgets.treeView.currentIndex().data(QFileSystemModel.FilePathRole)
+        self.imgFolderPath, _ = os.path.split(self.currentIndex)
 
         img_path = self.currentIndex
         label_path = self.convertImagePathToLabelPath(img_path)
         os.remove(img_path)
         os.remove(label_path)
         
-        self.ui.treeView.model().removeRow(self.ui.treeView.currentIndex().row(), self.ui.treeView.currentIndex().parent())
+        mainWidgets.treeView.model().removeRow(mainWidgets.treeView.currentIndex().row(), mainWidgets.treeView.currentIndex().parent())
 
 
     @staticmethod
@@ -440,7 +269,7 @@ class ImageFunctions(DNNFunctions):
     
     def addNewImage(self, event):
 
-        self.currentIndex = self.ui.treeView.currentIndex().data(QFileSystemModel.FilePathRole)
+        self.currentIndex = mainWidgets.treeView.currentIndex().data(QFileSystemModel.FilePathRole)
         
         self.imgFolderPath, filename = os.path.split(self.currentIndex)
 
@@ -487,7 +316,7 @@ class ImageFunctions(DNNFunctions):
             refreshIndex (bool, optional): Refresh the current index. Defaults to False.
         """
         
-        self.ui.treeView.reset()
+        mainWidgets.treeView.reset()
         self.fileModel = QFileSystemModel()
         _imgFolderPath = self.imgFolderPath.replace('/train', '')
         _imgFolderPath = _imgFolderPath.replace('/test', '')
@@ -495,22 +324,11 @@ class ImageFunctions(DNNFunctions):
 
         self.fileModel.setRootPath(_imgFolderPath)
         
-        self.ui.treeView.setModel(self.fileModel)
-        self.ui.treeView.setRootIndex(self.fileModel.index(_imgFolderPath))
+        mainWidgets.treeView.setModel(self.fileModel)
+        mainWidgets.treeView.setRootIndex(self.fileModel.index(_imgFolderPath))
 
         if refreshIndex:
-            self.ui.treeView.setCurrentIndex(self.fileModel.index(self.currentIndex))
-
-
-    def readImageToPixmap(self, path):
-        """Read image to pixmap
-        Args:
-            path (str): Image path
-        Returns:
-            QPixmap: Image pixmap
-        """
-        img = imread(path)
-        return QPixmap(cvtArrayToQImage(img))
+            mainWidgets.treeView.setCurrentIndex(self.fileModel.index(self.currentIndex))
 
     
     def openImage(self, index):
@@ -520,11 +338,10 @@ class ImageFunctions(DNNFunctions):
         self.labelPath = self.imgPath.replace('/leftImg8bit/', '/gtFine/')
         self.labelPath = self.labelPath.replace( '_leftImg8bit.png', '_gtFine_labelIds.png')
 
-        self.pixmap = self.readImageToPixmap(self.imgPath)        
+        self.pixmap = readImageToPixmap(self.imgPath)        
         
         self.label = imread(self.labelPath)
 
-        # if self.label.shape[0] * self.label.shape[1] < 10000 * 10000:
         self.colormap = convertLabelToColorMap(self.label, self.label_palette, self.alpha)
         self.color_pixmap = QPixmap(cvtArrayToQImage(self.colormap))
         
@@ -533,22 +350,27 @@ class ImageFunctions(DNNFunctions):
 
         self.color_pixmap_item = self.scene.addPixmap(self.color_pixmap)
 
-        self.ui.mainImageViewer.setScene(self.scene)
+        mainWidgets.mainImageViewer.setScene(self.scene)
 
-        self.scale = self.ui.scrollAreaImage.height() / self.label.shape[0]
-        self.ui.mainImageViewer.setFixedSize(self.scale * self.color_pixmap.size())
-        self.ui.mainImageViewer.fitInView(self.pixmap_item)
+        self.scale = mainWidgets.scrollAreaImage.height() / self.label.shape[0]
+        mainWidgets.mainImageViewer.setFixedSize(self.scale * self.color_pixmap.size())
+        mainWidgets.mainImageViewer.fitInView(self.pixmap_item)
+
+        if hasattr(self, 'sam_predictor'):
+            self.set_sam_image()
+            self.sam_x_idx = None 
+            self.sam_y_idx = None
+
         
     def useGrabCut(self, event):
-
         """
         Label Enhancement Tool
         """
         import cv2
         
-        event_global = self.ui.mainImageViewer.mapFromGlobal(event.globalPos())
+        event_global = mainWidgets.mainImageViewer.mapFromGlobal(event.globalPos())
 
-        x, y = getScaledPoint_v2(event_global, self.scale)
+        x, y = getScaledPoint(event_global, self.scale)
         
         if (self.x != x) or (self.y != y) : 
 
@@ -565,8 +387,6 @@ class ImageFunctions(DNNFunctions):
             else :
                 min_y = self.y
                 max_y = y
-    
-            print(min_y, min_x, max_y, max_x)
 
             # get the region of interest
             img = cvtPixmapToArray(self.pixmap)
@@ -591,90 +411,328 @@ class ImageFunctions(DNNFunctions):
         self.x = x
         self.y = y
 
-        
-    def brushReleasePoint(self, event):
+    def drawRectangle(self, event):
 
-        if self.use_enhancement :
+        event_global = mainWidgets.mainImageViewer.mapFromGlobal(event.globalPos())
+
+        x, y = getScaledPoint(event_global, self.scale)
+        
+        if (self.fixed_x != x) or (self.fixed_y != y) : 
+
+            # draw empty rectangle on the colormap
+
+            if self.fixed_x > x :
+                min_x = x
+                max_x = self.fixed_x
+            else :
+                min_x = self.fixed_x
+                max_x = x
+            
+            if self.fixed_y > y :
+                min_y = y
+                max_y = self.fixed_y
+            else :
+                min_y = self.fixed_y
+                max_y = y
+
+            # draw rectangle with cv2 
+
+            _colormap = copy.deepcopy(self.colormap)
+            
+            _colormap = cv2.rectangle(_colormap, (min_x, min_y), (max_x, max_y), (255, 255, 255, 255), 3)
+
+            self.rect_min_x = min_x
+            self.rect_max_x = max_x
+            self.rect_min_y = min_y
+            self.rect_max_y = max_y
+
+
+            self.color_pixmap = QPixmap(cvtArrayToQImage(_colormap))
+            self.color_pixmap_item.setPixmap(QPixmap())
+            self.color_pixmap_item.setPixmap(self.color_pixmap)
+
+        self.x = x
+        self.y = y
+
+    def inferenceRectangle(self, event):
+
+        event_global = mainWidgets.mainImageViewer.mapFromGlobal(event.globalPos())
+        
+        x, y = getScaledPoint(event_global, self.scale)
+
+        if (self.fixed_x != x) or (self.fixed_y != y) :
+
+            # check if the point is in the image
+            if (x < 0) or (x > self.label.shape[1]) or (y < 0) or (y > self.label.shape[0]):
+                return None 
+            
+            # get the region of interest
+            img = cvtPixmapToArray(self.pixmap)
+
+            if self.fixed_x > x :
+                min_x = x
+                max_x = self.fixed_x
+            else :
+                min_x = self.fixed_x
+                max_x = x
+            
+            if self.fixed_y > y :
+                min_y = y
+                max_y = self.fixed_y
+            else :
+                min_y = self.fixed_y
+                max_y = y
+
+            img_roi = img[min_y:max_y, min_x:max_x, :3]
+            
+            if self.brush_class == 0:
+                pass 
+
+            elif self.brush_class == 1:
+                mask = self.inference_mmseg(img_roi)
+
+                idx = np.argwhere(mask == 1)
+                y_idx, x_idx = idx[:, 0], idx[:, 1]
+                x_idx = x_idx + min_x
+                y_idx = y_idx + min_y
+
+                self.label[y_idx, x_idx] = self.brush_class
+                self.colormap[y_idx, x_idx, :3] = self.label_palette[self.brush_class]
+
+                self.color_pixmap = QPixmap(cvtArrayToQImage(self.colormap))
+                self.color_pixmap_item.setPixmap(QPixmap())
+                self.color_pixmap_item.setPixmap(self.color_pixmap)
+
+            else :
+                self.input_label_list = []
+                self.input_point_list = []
+
+                if (self.sam_x_idx is not None) or (self.sam_y_idx is not None):
+                    self.label[self.sam_y_idx, self.sam_x_idx] = self.brush_class
+                    self.updateColorMap()
+
+                    self.sam_y_idx = None
+                    self.sam_x_idx = None
+                    
+
+                self.sam_predictor.set_image(img_roi)
+
+                # save min_x, min_y, max_x, max_y for SAM
+                self.sam_min_x = min_x
+                self.sam_min_y = min_y
+                self.sam_max_x = max_x
+                self.sam_max_y = max_y
+
+
+                
+    def _mouseDoubleClick(self, event):
+        pass
+        # if self.sam_mode == False:
+        #     self.sam_mode = True
+        # else :
+        #     self.sam_mode = False
+        # print(self.sam_mode)
+        self.startOrEndSAM()
+    
+    def _mouseReleasePoint(self, event):
+
+        event_global = mainWidgets.mainImageViewer.mapFromGlobal(event.globalPos())
+        x, y = getScaledPoint(event_global, self.scale)
+
+        if self.use_refinement :
             self.useEnhancement(event)
 
         if self.use_grabcut : 
             self.useGrabCut(event)
+
+        if self.use_autolabel:
+            # if mouse is not moved 
+            if (x == self.fixed_x) and (y == self.fixed_y) :
+                self.inferenceSinglePoint(event)
+
+            else: 
+                print("run rectangle inference")
+                self.inferenceRectangle(event)
 
         else: 
             self.color_pixmap = QPixmap(cvtArrayToQImage(self.colormap))
             self.color_pixmap_item.setPixmap(QPixmap())
             self.color_pixmap_item.setPixmap(self.color_pixmap)
             
-
-    
-    def brushMoveEvent(self, event):
-
+    def _mouseMoveEvent(self, event):
+        
         if self.use_brush : 
             self.useBrush(event)
 
-        
+        elif self.use_autolabel:
+            self.drawRectangle(event)
 
-    
-    def brushPressPoint(self, event):
+    def _mousePressPoint(self, event):
+        
         """
         Get the brush class and the point where the mouse is pressed
         """
 
         # Get the brush class
-        self.brush_class = self.ui.classList.currentRow()
+        self.brush_class = mainWidgets.classList.currentRow()
 
-        event_global = self.ui.mainImageViewer.mapFromGlobal(event.globalPos())
-        x, y = getScaledPoint_v2(event_global, self.scale)
+        event_global = mainWidgets.mainImageViewer.mapFromGlobal(event.globalPos())
+        x, y = getScaledPoint(event_global, self.scale)
 
         self.x = x
         self.y = y
 
-        if self.use_autolabel : 
-            self.useAutoLabel()
+        self.fixed_x = x
+        self.fixed_y = y 
         
 
-    def useAutoLabel(self):
+    def inferenceSinglePoint(self, event):
 
-        # img = self.pixmap.toImage()
+        if self.brush_class == 1 : 
+            img = cvtPixmapToArray(self.pixmap)
+
+            min_x = self.x - 128
+            min_y = self.y - 128
+            max_x = self.x + 128
+            max_y = self.y + 128
+
+            if min_x < 0 :
+                min_x = 0
+            if min_y < 0 :
+                min_y = 0
+
+            if max_x > img.shape[1] :
+                max_x = img.shape[1]
+            
+            if max_y > img.shape[0] :
+                max_y = img.shape[0]
+
+            img = img[min_y:max_y, min_x:max_x, :]
+            
+            result = self.inference_mmseg(img, do_crf=False)
+
+            # update label with result
+
+            idx = np.argwhere(result == 1)
+            y_idx, x_idx = idx[:, 0], idx[:, 1]
+            x_idx = x_idx + min_x
+            y_idx = y_idx + min_y
+
+            self.label[y_idx, x_idx] = self.brush_class
+            self.colormap[y_idx, x_idx, :3] = self.label_palette[self.brush_class]
+
+            self.color_pixmap = QPixmap(cvtArrayToQImage(self.colormap))
+            self.color_pixmap_item.setPixmap(QPixmap())
+            self.color_pixmap_item.setPixmap(self.color_pixmap)
+        
+        else :
+            self.inference_sam(event)
+
+    def inference_sam(self, event):
+        """
+        Inference the image with the sam model
+        Args:
+            event (QEvent): The event.
+        """
+        sam_x = self.x - self.sam_min_x
+        sam_y = self.y - self.sam_min_y
+
+        self.input_point_list.append([sam_x, sam_y])
+
+        # if mouse left click
+        if event.button() == Qt.LeftButton:
+            self.input_label_list.append(1)
+        # if mouse right click
+        elif event.button() == Qt.RightButton:
+            self.input_label_list.append(0)
+
+        input_point = np.array(self.input_point_list)
+        input_label = np.array(self.input_label_list)
+        print("input_point: ", input_point)
+        print("input_label: ", input_label)
+
+        if len(self.input_label_list) < 2:
+
+            masks, scores, logits = self.sam_predictor.predict(
+                point_coords=input_point,
+                point_labels=input_label,
+                multimask_output=True,
+            )
+
+            mask = masks[np.argmax(scores), :, :]
+            self.sam_mask_input = logits[np.argmax(scores), :, :]
+
+            # update label with result
+            idx = np.argwhere(mask == 1)
+            y_idx, x_idx = idx[:, 0], idx[:, 1]
+
+        else : 
+            print(self.sam_mask_input.shape)
+            masks, _, _ = self.sam_predictor.predict(
+                point_coords=input_point,
+                point_labels=input_label,
+                mask_input=self.sam_mask_input[None, :, :],
+                multimask_output=False,
+            )
+
+            mask = masks[0, :, :]
+            print(masks)
+            print(masks.shape)
+            # self.sam_mask_input = logits
+
+            # update label with result
+            idx = np.argwhere(mask == 1)
+            y_idx, x_idx = idx[:, 0], idx[:, 1]
 
         
-        # width, height = img.width(), img.height()
-        # buffer = img.bits().asstring(width * height * 4)
-        # img = np.frombuffer(buffer, dtype=np.uint8).reshape((height, width, 4))
+        y_idx = y_idx + self.sam_min_y
+        x_idx = x_idx + self.sam_min_x
 
-        img = cvtPixmapToArray(self.pixmap)
-
-        min_x = self.x - 128
-        min_y = self.y - 128
-        max_x = self.x + 128
-        max_y = self.y + 128
-
-        if min_x < 0 :
-            min_x = 0
-        if min_y < 0 :
-            min_y = 0
-
-        if max_x > img.shape[1] :
-            max_x = img.shape[1]
+        self.sam_y_idx = y_idx
+        self.sam_x_idx = x_idx
         
-        if max_y > img.shape[0] :
-            max_y = img.shape[0]
+        # self.label[y_idx, x_idx] = self.brush_class
+        self.updateColorMap()
 
-        img = img[min_y:max_y, min_x:max_x, :]
-        
-        result = self.dnn_inference(img, do_crf=False)
+        # cv2 add circles to self.colormap
+        # self.colormap[y_idx, x_idx, :3] = self.label_palette[self.brush_class]
 
-        # update label with result
-
-        idx = np.argwhere(result == 1)
-        y_idx, x_idx = idx[:, 0], idx[:, 1]
-        x_idx = x_idx + min_x
-        y_idx = y_idx + min_y
-
-        self.label[y_idx, x_idx] = self.brush_class
         self.colormap[y_idx, x_idx, :3] = self.label_palette[self.brush_class]
 
+        _colormap = copy.deepcopy(self.colormap)
+        cv2.rectangle(_colormap, (self.rect_min_x, self.rect_min_y), (self.rect_max_x, self.rect_max_y), (255, 255, 255, 255), 3)
 
+        
+        self.color_pixmap = QPixmap(cvtArrayToQImage(_colormap))
+        self.color_pixmap_item.setPixmap(QPixmap())
+        self.color_pixmap_item.setPixmap(self.color_pixmap)
+
+    def startOrEndSAM(self):
+
+        self.input_label_list = []
+        self.input_point_list = []
+        
+        # if not self.sam_mode:
+        self.label[self.sam_y_idx, self.sam_x_idx] = self.brush_class
+        self.updateColorMap()
+
+        self.sam_y_idx = None
+        self.sam_x_idx = None
+            
+
+        # if self.sam_mode : 
+
+        #     # update label 
+        #     self.label[self.sam_y_idx, self.sam_x_idx] = self.brush_class
+        #     self.updateColorMap()
+        #     self.sam_mode = False
+
+        # else : 
+        #     # start sam_mode
+        #     self.sam_mode = True
+
+
+    
     def updateColorMap(self):
         """
         Update the color map
@@ -687,13 +745,13 @@ class ImageFunctions(DNNFunctions):
 
     def useBrush(self, event):
 
-        event_global = self.ui.mainImageViewer.mapFromGlobal(event.globalPos())
+        event_global = mainWidgets.mainImageViewer.mapFromGlobal(event.globalPos())
 
-        x, y = getScaledPoint_v2(event_global, self.scale)
+        x, y = getScaledPoint(event_global, self.scale)
         
         if (self.x != x) or (self.y != y) : 
 
-            x_btw, y_btw = points_between(self.x, self.y, x, y)
+            x_btw, y_btw = getCoordBTWTwoPoints(self.x, self.y, x, y)
 
             x_btw, y_btw = applyBrushSize(x_btw, y_btw, self.brushSize, self.label.shape[1], self.label.shape[0])
 
@@ -707,8 +765,3 @@ class ImageFunctions(DNNFunctions):
 
         self.x = x
         self.y = y
-
-
-        
-
-

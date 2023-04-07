@@ -2678,7 +2678,7 @@ background-position: left center;
                    </font>
                   </property>
                   <property name="text">
-                   <string>CHALK: Concrete Damage Automatic Labeling ToolKit</string>
+                   <string>CHALK: Concrete Damage Automatic Labeling ToolKit  </string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -4179,6 +4179,7 @@ background-repeat: no-repeat;</string>
                        <string notr="true">.QPushButton { background-color: rgb(52, 59, 72); border: none;  border-radius: 5px; }
 .QPushButton:hover { background-color: rgb(44, 49, 57); border-style: solid; border-radius: 4px; }
 .QPushButton:pressed { background-color: rgb(23, 26, 30); border-style: solid; border-radius: 4px; }
+.QPushButton:checked { background-color: rgb(23, 26, 30); border-style: solid; border-radius: 4px; }
 </string>
                       </property>
                       <property name="text">
@@ -4187,6 +4188,12 @@ background-repeat: no-repeat;</string>
                       <property name="icon">
                        <iconset resource="../resources.qrc">
                         <normaloff>:/icons/images/icons/icon-brush.png</normaloff>:/icons/images/icons/icon-brush.png</iconset>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="checked">
+                       <bool>false</bool>
                       </property>
                      </widget>
                     </item>
@@ -4219,6 +4226,7 @@ background-repeat: no-repeat;</string>
                        <string notr="true">.QPushButton { background-color: rgb(52, 59, 72); border: none;  border-radius: 5px; }
 .QPushButton:hover { background-color: rgb(44, 49, 57); border-style: solid; border-radius: 4px; }
 .QPushButton:pressed { background-color: rgb(23, 26, 30); border-style: solid; border-radius: 4px; }
+.QPushButton:checked { background-color: rgb(23, 26, 30); border-style: solid; border-radius: 4px; }
 </string>
                       </property>
                       <property name="text">
@@ -4227,6 +4235,12 @@ background-repeat: no-repeat;</string>
                       <property name="icon">
                        <iconset resource="../resources.qrc">
                         <normaloff>:/icons/images/icons/icon-eraser.png</normaloff>:/icons/images/icons/icon-eraser.png</iconset>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="checked">
+                       <bool>false</bool>
                       </property>
                      </widget>
                     </item>
@@ -4259,6 +4273,7 @@ background-repeat: no-repeat;</string>
                        <string notr="true">.QPushButton { background-color: rgb(52, 59, 72); border: none;  border-radius: 5px; }
 .QPushButton:hover { background-color: rgb(44, 49, 57); border-style: solid; border-radius: 4px; }
 .QPushButton:pressed { background-color: rgb(23, 26, 30); border-style: solid; border-radius: 4px; }
+.QPushButton:checked { background-color: rgb(23, 26, 30); border-style: solid; border-radius: 4px; }
 </string>
                       </property>
                       <property name="text">
@@ -4267,6 +4282,9 @@ background-repeat: no-repeat;</string>
                       <property name="icon">
                        <iconset resource="../resources.qrc">
                         <normaloff>:/icons/images/icons/icon-ai.png</normaloff>:/icons/images/icons/icon-ai.png</iconset>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
                       </property>
                      </widget>
                     </item>
@@ -4299,6 +4317,7 @@ background-repeat: no-repeat;</string>
                        <string notr="true">.QPushButton { background-color: rgb(52, 59, 72); border: none;  border-radius: 5px; }
 .QPushButton:hover { background-color: rgb(44, 49, 57); border-style: solid; border-radius: 4px; }
 .QPushButton:pressed { background-color: rgb(23, 26, 30); border-style: solid; border-radius: 4px; }
+.QPushButton:checked { background-color: rgb(23, 26, 30); border-style: solid; border-radius: 4px; }
 </string>
                       </property>
                       <property name="text">
@@ -4307,6 +4326,12 @@ background-repeat: no-repeat;</string>
                       <property name="icon">
                        <iconset resource="../resources.qrc">
                         <normaloff>:/icons/images/icons/icon-enhancement.png</normaloff>:/icons/images/icons/icon-enhancement.png</iconset>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="checked">
+                       <bool>false</bool>
                       </property>
                      </widget>
                     </item>

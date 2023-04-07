@@ -15,9 +15,9 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QFrame, QHBoxLayout, QLabel,
-    QLineEdit, QMainWindow, QPushButton, QSizePolicy,
-    QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QHBoxLayout,
+    QLabel, QLineEdit, QMainWindow, QPushButton,
+    QSizePolicy, QVBoxLayout, QWidget)
 import resources_rc
 
 class Ui_ProjectName(object):
@@ -711,16 +711,17 @@ class Ui_ProjectName(object):
         self.nextButton = QPushButton(self.pagesContainer)
         self.nextButton.setObjectName(u"nextButton")
         self.nextButton.setGeometry(QRect(310, 185, 91, 31))
-        self.lineProjectName = QLineEdit(self.pagesContainer)
-        self.lineProjectName.setObjectName(u"lineProjectName")
-        self.lineProjectName.setGeometry(QRect(40, 50, 451, 30))
-        self.lineProjectName.setMinimumSize(QSize(0, 30))
-        self.lineProjectName.setStyleSheet(u"background-color: rgb(33, 37, 43);")
         self.lineFolder = QLineEdit(self.pagesContainer)
         self.lineFolder.setObjectName(u"lineFolder")
         self.lineFolder.setGeometry(QRect(40, 135, 361, 30))
         self.lineFolder.setMinimumSize(QSize(0, 30))
         self.lineFolder.setStyleSheet(u"background-color: rgb(33, 37, 43);")
+        self.datasetComboBox = QComboBox(self.pagesContainer)
+        self.datasetComboBox.addItem("")
+        self.datasetComboBox.addItem("")
+        self.datasetComboBox.addItem("")
+        self.datasetComboBox.setObjectName(u"datasetComboBox")
+        self.datasetComboBox.setGeometry(QRect(40, 50, 361, 31))
 
         self.horizontalLayout_4.addWidget(self.pagesContainer)
 
@@ -802,11 +803,13 @@ class Ui_ProjectName(object):
         self.label_2.setText(QCoreApplication.translate("ProjectName", u"<html><head/><body><p><span style=\" font-size:11pt;\">Project Folder</span></p></body></html>", None))
         self.selectFolderButton.setText(QCoreApplication.translate("ProjectName", u"Select Folder", None))
         self.cancelButton.setText(QCoreApplication.translate("ProjectName", u"Cancel", None))
-        self.nextButton.setText(QCoreApplication.translate("ProjectName", u"Next", None))
-        self.lineProjectName.setText("")
-        self.lineProjectName.setPlaceholderText(QCoreApplication.translate("ProjectName", u"Type here", None))
+        self.nextButton.setText(QCoreApplication.translate("ProjectName", u"Create", None))
         self.lineFolder.setText("")
         self.lineFolder.setPlaceholderText(QCoreApplication.translate("ProjectName", u"Type here", None))
+        self.datasetComboBox.setItemText(0, QCoreApplication.translate("ProjectName", u"KCQR", None))
+        self.datasetComboBox.setItemText(1, QCoreApplication.translate("ProjectName", u"Harbor2k", None))
+        self.datasetComboBox.setItemText(2, QCoreApplication.translate("ProjectName", u"UOSCD", None))
+
         self.creditsLabel.setText(QCoreApplication.translate("ProjectName", u"CHALK", None))
         self.version.setText(QCoreApplication.translate("ProjectName", u"v1.0.0", None))
     # retranslateUi

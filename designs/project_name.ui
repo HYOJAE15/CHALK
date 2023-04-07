@@ -993,32 +993,7 @@ Button */
                     </rect>
                    </property>
                    <property name="text">
-                    <string>Next</string>
-                   </property>
-                  </widget>
-                  <widget class="QLineEdit" name="lineProjectName">
-                   <property name="geometry">
-                    <rect>
-                     <x>40</x>
-                     <y>50</y>
-                     <width>451</width>
-                     <height>30</height>
-                    </rect>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true">background-color: rgb(33, 37, 43);</string>
-                   </property>
-                   <property name="text">
-                    <string/>
-                   </property>
-                   <property name="placeholderText">
-                    <string>Type here</string>
+                    <string>Create</string>
                    </property>
                   </widget>
                   <widget class="QLineEdit" name="lineFolder">
@@ -1045,6 +1020,31 @@ Button */
                    <property name="placeholderText">
                     <string>Type here</string>
                    </property>
+                  </widget>
+                  <widget class="QComboBox" name="datasetComboBox">
+                   <property name="geometry">
+                    <rect>
+                     <x>40</x>
+                     <y>50</y>
+                     <width>361</width>
+                     <height>31</height>
+                    </rect>
+                   </property>
+                   <item>
+                    <property name="text">
+                     <string>KCQR</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Harbor2k</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>UOSCD</string>
+                    </property>
+                   </item>
                   </widget>
                  </widget>
                 </item>

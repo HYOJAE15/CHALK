@@ -42,7 +42,6 @@ from modules.image_functions import ImageFunctions
 from modules.utils import imwrite
 
 
-
 class MainWindow(
     QMainWindow, UIFunctions, ProjectFunctions,
     ImageFunctions
@@ -50,79 +49,74 @@ class MainWindow(
     def __init__(self):
         QMainWindow.__init__(self)
 
+        """
+        Init UI
+        """
+        self.settings = Settings()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+
+        self.uiDefinitions()
 
         global widgets
         widgets = self.ui
 
         ProjectFunctions.__init__(self)
         ImageFunctions.__init__(self)
-        
 
-        widgets.appMargins.setContentsMargins(0, 0, 0, 0)
-        
+        """
+        Load settings
+        """
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
-        self.settings = Settings()
-
-        self.uiDefinitions()
-
-        widgets.toggleButton.clicked.connect(lambda: self.toggleMenu(True))
-
-        # QTableWidget PARAMETERS
-        # ///////////////////////////////////////////////////////////////
+        
+        widgets.appMargins.setContentsMargins(0, 0, 0, 0)        
         widgets.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
-        # BUTTONS CLICK
-        # ///////////////////////////////////////////////////////////////
+        # initial state of the menu
+        widgets.stackedWidget.setCurrentWidget(widgets.home)
+        widgets.btn_home.setStyleSheet(self.selectMenu(widgets.btn_home.styleSheet()))
 
-        # LEFT MENUS
-        widgets.btn_home.clicked.connect(self.buttonClick)
+        # widget grip state
+        widgets.imageLeftBox.grip = CustomGrip(widgets.imageLeftBox, Qt.RightEdge)
+        widgets.projectLeftBox.grip = CustomGrip(widgets.projectLeftBox, Qt.RightEdge)
+
+        """
+        Theme / Style
+        """
+        useCustomTheme = False
+        themeFile = "themes\py_dracula_light.qss"
+
+        if useCustomTheme:
+            self.theme(themeFile, True)
+
+        """
+        Button connections
+        """
+        widgets.toggleButton.clicked.connect(lambda: self.toggleMenu(True))
         
-        widgets.btn_save.clicked.connect(self.buttonClick)        
-
-        widgets.projectButton.clicked.connect(self.openProjectMenu)
-        widgets.closeProjectButton.clicked.connect(self.openProjectMenu)
-
+        widgets.btn_home.clicked.connect(self.clickHomeButton)        
         widgets.imageButton.clicked.connect(self.openImageMenu)
         widgets.closeImageButton.clicked.connect(self.openImageMenu)
-
         widgets.openRightToolBox.clicked.connect(self.openRightToolBox)
     
-        # EXTRA LEFT BOX
         def openCloseLeftBox():
             self.toggleLeftBox(True)
         widgets.toggleLeftBox.clicked.connect(openCloseLeftBox)
         widgets.extraCloseColumnBtn.clicked.connect(openCloseLeftBox)
 
-        # WHEEL EVENT
+        widgets.projectButton.clicked.connect(self.openProjectMenu)
+        widgets.closeProjectButton.clicked.connect(self.openProjectMenu)
+
+        """
+        Extra Events 
+        """
         self.ui.scrollAreaImage.wheelEvent = self.wheelEventScroll
 
-        # SHOW APP
-        # ///////////////////////////////////////////////////////////////
         self.show()
 
-        # SET CUSTOM THEME
-        # ///////////////////////////////////////////////////////////////
-        useCustomTheme = False
-        themeFile = "themes\py_dracula_light.qss"
+    def resizeEvent(self, event):
+        self.resize_grips()
 
-        # SET THEME AND HACKS
-        if useCustomTheme:
-            # LOAD AND APPLY STYLE
-            self.theme(themeFile, True)
-
-            # SET HACKS
-            # AppFunctions.setThemeHack(self)
-
-        # SET HOME PAGE AND SELECT MENU
-        # ///////////////////////////////////////////////////////////////
-        widgets.stackedWidget.setCurrentWidget(widgets.home)
-        widgets.btn_home.setStyleSheet(self.selectMenu(widgets.btn_home.styleSheet()))
-
-        widgets.imageLeftBox.grip = CustomGrip(widgets.imageLeftBox, Qt.RightEdge)
-        widgets.projectLeftBox.grip = CustomGrip(widgets.projectLeftBox, Qt.RightEdge)
-        
     def openProjectMenu(self):
 
         btn = self.sender()
@@ -159,6 +153,8 @@ class MainWindow(
         self.group.addAnimation(project_animation)
         self.group.start()
 
+        # change button status to check 
+        
 
     def openRightToolBox(self):
 
@@ -176,91 +172,55 @@ class MainWindow(
         
         self.group = QParallelAnimationGroup()
         self.group.addAnimation(right_animation)
-        self.group.start()
-        
-    def buttonClick(self):
-        # GET BUTTON CLICKED
+        self.group.start()        
+    
+    def clickHomeButton(self):
+
         btn = self.sender()
         btnName = btn.objectName()
 
-        # SHOW HOME PAGE
-        if btnName == "btn_home":
-            widgets.stackedWidget.setCurrentWidget(widgets.home)
-            self.resetStyle(btnName)
-            btn.setStyleSheet(self.selectMenu(btn.styleSheet()))
-
-        # SHOW WIDGETS PAGE
-        if btnName == "btn_widgets":
-            widgets.stackedWidget.setCurrentWidget(widgets.widgets)
-            self.resetStyle(btnName)
-            btn.setStyleSheet(self.selectMenu(btn.styleSheet()))
-
-            project_animation = self.toggleLeftBoxAnimation(widgets.projectLeftBox)
-            image_animation = self.toggleLeftBoxAnimation(widgets.imageLeftBox, to_standard=True)
-
-            self.group = QParallelAnimationGroup()
-            self.group.addAnimation(project_animation)
-            self.group.addAnimation(image_animation)
-            self.group.start()
-
-        # SHOW NEW PAGE
-        if btnName == "btn_new":
-            widgets.stackedWidget.setCurrentWidget(widgets.new_page) # SET PAGE
-            self.resetStyle(btnName) # RESET ANOTHERS BUTTONS SELECTED
-            btn.setStyleSheet(self.selectMenu(btn.styleSheet())) # SELECT MENU
-            
-            image_animation = self.toggleLeftBoxAnimation(widgets.imageLeftBox)
-            project_animation = self.toggleLeftBoxAnimation(widgets.projectLeftBox, to_standard=True)
-
-            self.group = QParallelAnimationGroup()
-            self.group.addAnimation(project_animation)
-            self.group.addAnimation(image_animation)
-            self.group.start()
-
-        if btnName == "btn_save":
-            print("Save BTN clicked!")
-
-        # PRINT BTN NAME
-        print(f'Button "{btnName}" pressed!')
-
-        
-
-
-    # RESIZE EVENTS
-    # ///////////////////////////////////////////////////////////////
-    def resizeEvent(self, event):
-        # Update Size Grips
-        self.resize_grips()
-
-    # MOUSE CLICK EVENTS
-    # ///////////////////////////////////////////////////////////////
-    def mousePressEvent(self, event):
-        # SET DRAG POS WINDOW
-        self.dragPos = event.globalPos()
-
-        # PRINT MOUSE EVENTS
-        if event.buttons() == Qt.LeftButton:
-            print('Mouse click: LEFT CLICK')
-        if event.buttons() == Qt.RightButton:
-            print('Mouse click: RIGHT CLICK')
-
+        widgets.stackedWidget.setCurrentWidget(widgets.home)
+        self.resetStyle(btnName)
+        btn.setStyleSheet(self.selectMenu(btn.styleSheet()))
 
     def keyPressEvent(self, event):
+
+        if event.key() == 65 : # A key
+            self.checkAutoLabelButton()
+
+        elif event.key() == 69 : # E key
+            self.checkEnhancementButton()
+
+        elif event.key() == 66 : # B key
+            self.checkBrushButton()
+        
+        elif event.key() == 71 : # G key
+            self.checkGrabCutButton()
+        
             
-        if event.key() == 16777249:
+        elif event.key() == 16777249: # Ctrl key
             self.ControlKey = True
 
-        if event.key() == 83: # S key 
+        elif event.key() == 83: # S key 
             if self.ControlKey:
                 imwrite(self.labelPath, self.label) 
+
+        elif event.key() == 72: # H key
+            # activate scroll move mode 
+            self.scrollMove = True
             
-
     def keyReleaseEvent(self, event):
-
         # zoom
         if event.key() == 16777249:
             self.ControlKey = False
 
+        elif event.key() == 77:
+            self.sam_mode = False
+            print(self.sam_mode)
+            self.startOrEndSAM()
+
+    def mousePressEvent(self, event):
+        self.dragPos = event.globalPos()
 
     def wheelEventScroll(self, event):
         
@@ -308,13 +268,7 @@ class MainWindow(
             self.ui.mainImageViewer.fitInView(self.pixmap_item)
             self.ui.mainImageViewer.setVisible(False)
             
-
-            # self.rescaleLabelViewer()
-            self.ui.mainImageViewer.setVisible(True)
-
-            # self.ui.scrollAreaImage.update()
-            # self.ui.mainImageViewer.update()
-            
+            self.ui.mainImageViewer.setVisible(True)            
 
         else : 
             scroll_value = self.ui.scrollAreaImage.verticalScrollBar().value()

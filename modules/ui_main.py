@@ -1898,10 +1898,13 @@ class Ui_MainWindow(object):
         self.brushButton.setStyleSheet(u".QPushButton { background-color: rgb(52, 59, 72); border: none;  border-radius: 5px; }\n"
 ".QPushButton:hover { background-color: rgb(44, 49, 57); border-style: solid; border-radius: 4px; }\n"
 ".QPushButton:pressed { background-color: rgb(23, 26, 30); border-style: solid; border-radius: 4px; }\n"
+".QPushButton:checked { background-color: rgb(23, 26, 30); border-style: solid; border-radius: 4px; }\n"
 "")
         icon8 = QIcon()
         icon8.addFile(u":/icons/images/icons/icon-brush.png", QSize(), QIcon.Normal, QIcon.Off)
         self.brushButton.setIcon(icon8)
+        self.brushButton.setCheckable(True)
+        self.brushButton.setChecked(False)
 
         self.gridLayout_3.addWidget(self.brushButton, 0, 0, 1, 1)
 
@@ -1915,10 +1918,13 @@ class Ui_MainWindow(object):
         self.grabCutButton.setStyleSheet(u".QPushButton { background-color: rgb(52, 59, 72); border: none;  border-radius: 5px; }\n"
 ".QPushButton:hover { background-color: rgb(44, 49, 57); border-style: solid; border-radius: 4px; }\n"
 ".QPushButton:pressed { background-color: rgb(23, 26, 30); border-style: solid; border-radius: 4px; }\n"
+".QPushButton:checked { background-color: rgb(23, 26, 30); border-style: solid; border-radius: 4px; }\n"
 "")
         icon9 = QIcon()
         icon9.addFile(u":/icons/images/icons/icon-eraser.png", QSize(), QIcon.Normal, QIcon.Off)
         self.grabCutButton.setIcon(icon9)
+        self.grabCutButton.setCheckable(True)
+        self.grabCutButton.setChecked(False)
 
         self.gridLayout_3.addWidget(self.grabCutButton, 0, 1, 1, 1)
 
@@ -1932,10 +1938,12 @@ class Ui_MainWindow(object):
         self.autoLabelButton.setStyleSheet(u".QPushButton { background-color: rgb(52, 59, 72); border: none;  border-radius: 5px; }\n"
 ".QPushButton:hover { background-color: rgb(44, 49, 57); border-style: solid; border-radius: 4px; }\n"
 ".QPushButton:pressed { background-color: rgb(23, 26, 30); border-style: solid; border-radius: 4px; }\n"
+".QPushButton:checked { background-color: rgb(23, 26, 30); border-style: solid; border-radius: 4px; }\n"
 "")
         icon10 = QIcon()
         icon10.addFile(u":/icons/images/icons/icon-ai.png", QSize(), QIcon.Normal, QIcon.Off)
         self.autoLabelButton.setIcon(icon10)
+        self.autoLabelButton.setCheckable(True)
 
         self.gridLayout_3.addWidget(self.autoLabelButton, 1, 0, 1, 1)
 
@@ -1949,10 +1957,13 @@ class Ui_MainWindow(object):
         self.enhancementButton.setStyleSheet(u".QPushButton { background-color: rgb(52, 59, 72); border: none;  border-radius: 5px; }\n"
 ".QPushButton:hover { background-color: rgb(44, 49, 57); border-style: solid; border-radius: 4px; }\n"
 ".QPushButton:pressed { background-color: rgb(23, 26, 30); border-style: solid; border-radius: 4px; }\n"
+".QPushButton:checked { background-color: rgb(23, 26, 30); border-style: solid; border-radius: 4px; }\n"
 "")
         icon11 = QIcon()
         icon11.addFile(u":/icons/images/icons/icon-enhancement.png", QSize(), QIcon.Normal, QIcon.Off)
         self.enhancementButton.setIcon(icon11)
+        self.enhancementButton.setCheckable(True)
+        self.enhancementButton.setChecked(False)
 
         self.gridLayout_3.addWidget(self.enhancementButton, 1, 1, 1, 1)
 
@@ -2163,7 +2174,7 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(shortcut)
         self.btn_add_new_project.setText(QCoreApplication.translate("MainWindow", u"Add New Project", None))
         self.btn_open_project.setText(QCoreApplication.translate("MainWindow", u"Open Project", None))
-        self.titleRightInfo.setText(QCoreApplication.translate("MainWindow", u"CHALK: Concrete Damage Automatic Labeling ToolKit", None))
+        self.titleRightInfo.setText(QCoreApplication.translate("MainWindow", u"CHALK: Concrete Damage Automatic Labeling ToolKit  ", None))
 #if QT_CONFIG(tooltip)
         self.openRightToolBox.setToolTip(QCoreApplication.translate("MainWindow", u"Settings", None))
 #endif // QT_CONFIG(tooltip)

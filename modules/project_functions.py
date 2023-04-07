@@ -3,7 +3,7 @@ import json
 
 import numpy as np 
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QParallelAnimationGroup
 from PySide6.QtGui import QColor, QIcon, QPixmap
 from PySide6.QtWidgets import (
     QMainWindow, QFileDialog, QTableWidgetItem, QColorDialog,
@@ -24,30 +24,16 @@ class ProjectClassWindow(QMainWindow, UIFunctions):
         self.ui = Ui_ProjectClass()
         self.ui.setupUi(self)
         self.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
-        # self.show()
 
         self.settings = Settings()
 
         self.uiDefinitions()
 
-    # RESIZE EVENTS
-    # ///////////////////////////////////////////////////////////////
     def resizeEvent(self, event):
-        # Update Size Grips
         self.resize_grips()
 
-    # MOUSE CLICK EVENTS
-    # ///////////////////////////////////////////////////////////////
     def mousePressEvent(self, event):
-        # SET DRAG POS WINDOW
         self.dragPos = event.globalPos()
-
-        # PRINT MOUSE EVENTS
-        if event.buttons() == Qt.LeftButton:
-            print('Mouse click: LEFT CLICK')
-        if event.buttons() == Qt.RightButton:
-            print('Mouse click: RIGHT CLICK')
-
 
 
 class ProjectNameWindow(QMainWindow, UIFunctions):
@@ -63,29 +49,19 @@ class ProjectNameWindow(QMainWindow, UIFunctions):
 
         self.uiDefinitions()
 
-    # RESIZE EVENTS
-    # ///////////////////////////////////////////////////////////////
     def resizeEvent(self, event):
-        # Update Size Grips
         self.resize_grips()
 
-    # MOUSE CLICK EVENTS
-    # ///////////////////////////////////////////////////////////////
     def mousePressEvent(self, event):
-        # SET DRAG POS WINDOW
         self.dragPos = event.globalPos()
-
-        # PRINT MOUSE EVENTS
-        if event.buttons() == Qt.LeftButton:
-            print('Mouse click: LEFT CLICK')
-        if event.buttons() == Qt.RightButton:
-            print('Mouse click: RIGHT CLICK')
-
 
 
 class ProjectFunctions(object):
     def __init__(self):
 
+        """
+        Init UI
+        """
         if not hasattr(self, 'ui'):
             QMainWindow.__init__(self)
             self.ui = Ui_MainWindow()
@@ -93,32 +69,40 @@ class ProjectFunctions(object):
         
         self.new_project_info = {}
 
+        global mainWidgets
+        mainWidgets = self.ui 
+
+        """
+        Button connections
+        """
+        # ProjectNameWindow
         self.ProjectName = ProjectNameWindow()
         UIProjectName = self.ProjectName.ui
         UIProjectName.selectFolderButton.clicked.connect(self.selectProjectFolder)
         UIProjectName.nextButton.clicked.connect(self.openProjectClassDialogue)
         UIProjectName.cancelButton.clicked.connect(self.ProjectName.close)
 
+        # ProjectClassWindow
         self.projectClass = ProjectClassWindow()
         self.projectClass.ui.okButton.clicked.connect(self.createProjectHeader)
         self.projectClass.ui.cancelButton.clicked.connect(self.projectClass.close)
-
         self.projectClass.ui.addButton.clicked.connect(self.addRow)
         self.projectClass.ui.removeButton.clicked.connect(self.deleteRow)
         self.projectClass.ui.tableWidget.clicked.connect(self.eventTable)
         self.projectClass.ui.tableWidget.doubleClicked.connect(self.eventTable)
 
-        self.ui.btn_add_new_project.clicked.connect(
+        # Main Window
+        mainWidgets.btn_add_new_project.clicked.connect(
             lambda: self.ProjectName.show()
             )
-        self.ui.btn_open_project.clicked.connect(self.openExistingProject)
-
-
+        mainWidgets.btn_open_project.clicked.connect(self.openExistingProject)
+        
     def selectProjectFolder(self):
         self.project_folder = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
         self.ProjectName.ui.lineFolder.setText(self.project_folder)
-
+    
     def openProjectClassDialogue(self):
+
         self.project_name = self.ProjectName.ui.lineProjectName.text()
         self.new_project_info['project_name'] = self.project_name
         self.new_project_info['project_folder'] = self.project_folder
@@ -127,13 +111,11 @@ class ProjectFunctions(object):
     
     def eventTable(self, item):
         if item.column() != 0: 
-            # open color picker 
             color = QColorDialog.getColor()
             
             self.projectClass.ui.tableWidget.item(item.row(), 1).setText(f'[{color.red()}, {color.green()}, {color.blue()}]')
 
             self.projectClass.ui.tableWidget.item(item.row(), 2).setForeground(QColor(color.red(), color.green(), color.blue()))
-
 
     def addRow(self):
         rowPosition = self.projectClass.ui.tableWidget.rowCount()
@@ -154,13 +136,10 @@ class ProjectFunctions(object):
         
         self.projectClass.ui.tableWidget.item(rowPosition, 1).setBackground(QColor(rowPosition, rowPosition, rowPosition))
 
-
     def deleteRow(self):
         self.projectClass.ui.tableWidget.removeRow(self.projectClass.ui.tableWidget.currentRow())
 
-
     def createProjectHeader(self):
-
         createProjectFile_name = self.new_project_info['project_name'] + ".hdr"
 
         path = self.new_project_info['project_folder']
@@ -208,7 +187,6 @@ class ProjectFunctions(object):
         
         self.ui.treeView.setModel(self.fileModel)
         self.ui.treeView.setRootIndex(self.fileModel.index(os.path.join(folderPath, 'leftImg8bit')))
-        
 
         with open(hdr_path) as f:
             hdr = json.load(f)
@@ -230,13 +208,3 @@ class ProjectFunctions(object):
         self.label_palette = np.array(self.label_palette)
 
         self.openImageMenu()
-
-
-
-    
-
-        
-
-
-
-        
