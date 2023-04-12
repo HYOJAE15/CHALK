@@ -64,7 +64,7 @@ To setup CHALK, run the following command:
 python setup.py develop
 ```
 
-7. Download checkpoint files for Autolabeling Function 
+7\. Download checkpoint files for Autolabeling Function 
 -------------------------------------------------------
 
 Checkpoints for the autolabeling function are available at the following links and should be placed in the `dnn/checkpoints` directory:
