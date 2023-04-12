@@ -1,2 +1,4 @@
 opencv-python
+scikit-image
 numba
+PySide6

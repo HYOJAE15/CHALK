@@ -106,8 +106,8 @@ class ImageFunctions(DNNFunctions):
         self.input_point_list = []
         self.input_label_list = []
 
-        self.sam_y_idx = None
-        self.sam_x_idx = None
+        self.sam_y_idx = []
+        self.sam_x_idx = []
     
     def useEnhancement(self, event):
         """
@@ -358,8 +358,8 @@ class ImageFunctions(DNNFunctions):
 
         if hasattr(self, 'sam_predictor'):
             self.set_sam_image()
-            self.sam_x_idx = None 
-            self.sam_y_idx = None
+            self.sam_x_idx = [] 
+            self.sam_y_idx = []
 
         
     def useGrabCut(self, event):
@@ -507,12 +507,12 @@ class ImageFunctions(DNNFunctions):
                 self.input_label_list = []
                 self.input_point_list = []
 
-                if (self.sam_x_idx is not None) or (self.sam_y_idx is not None):
+                if (len(self.sam_x_idx) > 0) or (len(self.sam_y_idx) > 0):
                     self.label[self.sam_y_idx, self.sam_x_idx] = self.brush_class
                     self.updateColorMap()
 
-                    self.sam_y_idx = None
-                    self.sam_x_idx = None
+                    self.sam_y_idx = []
+                    self.sam_x_idx = []
                     
 
                 self.sam_predictor.set_image(img_roi)
@@ -526,12 +526,6 @@ class ImageFunctions(DNNFunctions):
 
                 
     def _mouseDoubleClick(self, event):
-        pass
-        # if self.sam_mode == False:
-        #     self.sam_mode = True
-        # else :
-        #     self.sam_mode = False
-        # print(self.sam_mode)
         self.startOrEndSAM()
     
     def _mouseReleasePoint(self, event):
@@ -552,7 +546,10 @@ class ImageFunctions(DNNFunctions):
 
             else: 
                 print("run rectangle inference")
-                self.inferenceRectangle(event)
+                if (self.rect_max_x - self.rect_min_x) < 100 or (self.rect_max_y - self.rect_min_y) < 100:
+                    return None
+                else:
+                    self.inferenceRectangle(event)
 
         else: 
             self.color_pixmap = QPixmap(cvtArrayToQImage(self.colormap))
@@ -562,7 +559,10 @@ class ImageFunctions(DNNFunctions):
     def _mouseMoveEvent(self, event):
         
         if self.use_brush : 
-            self.useBrush(event)
+            if self.brushSize > 20: 
+                self.useBrush(event)
+            else:
+                self.useBrushV1(event)
 
         elif self.use_autolabel:
             self.drawRectangle(event)
@@ -716,21 +716,8 @@ class ImageFunctions(DNNFunctions):
         self.label[self.sam_y_idx, self.sam_x_idx] = self.brush_class
         self.updateColorMap()
 
-        self.sam_y_idx = None
-        self.sam_x_idx = None
-            
-
-        # if self.sam_mode : 
-
-        #     # update label 
-        #     self.label[self.sam_y_idx, self.sam_x_idx] = self.brush_class
-        #     self.updateColorMap()
-        #     self.sam_mode = False
-
-        # else : 
-        #     # start sam_mode
-        #     self.sam_mode = True
-
+        self.sam_y_idx = []
+        self.sam_x_idx = []
 
     
     def updateColorMap(self):
@@ -743,7 +730,7 @@ class ImageFunctions(DNNFunctions):
         self.color_pixmap_item.setPixmap(self.color_pixmap)
 
 
-    def useBrush(self, event):
+    def useBrushV1(self, event):
 
         event_global = mainWidgets.mainImageViewer.mapFromGlobal(event.globalPos())
 
@@ -758,6 +745,28 @@ class ImageFunctions(DNNFunctions):
             self.label[y_btw, x_btw] = self.brush_class
             self.colormap[y_btw, x_btw, :3] = self.label_palette[self.brush_class]
 
+            self.color_pixmap = QPixmap(cvtArrayToQImage(self.colormap))
+
+            self.color_pixmap_item.setPixmap(QPixmap())
+            self.color_pixmap_item.setPixmap(self.color_pixmap)
+
+        self.x = x
+        self.y = y
+
+    def useBrush(self, event):
+
+        event_global = mainWidgets.mainImageViewer.mapFromGlobal(event.globalPos())
+
+        x, y = getScaledPoint(event_global, self.scale)
+        
+        if (self.x != x) or (self.y != y) : 
+
+            # find max and min x and y
+            label_rgb = cv2.cvtColor(self.label, cv2.COLOR_GRAY2RGB)
+            cv2.line(label_rgb, (self.x, self.y), (x, y), (self.brush_class, self.brush_class, self.brush_class), self.brushSize)
+            self.label = label_rgb[:, :, 0]
+
+            self.colormap = convertLabelToColorMap(self.label, self.label_palette, self.alpha)
             self.color_pixmap = QPixmap(cvtArrayToQImage(self.colormap))
 
             self.color_pixmap_item.setPixmap(QPixmap())

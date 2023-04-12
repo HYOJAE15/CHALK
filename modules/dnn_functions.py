@@ -6,7 +6,7 @@ from .ui_sam_window import Ui_SAMWindow
 from .ui_functions import UIFunctions
 from .app_settings import Settings
 
-from mmseg.apis import inference_segmentor, init_segmentor
+from mmseg.apis import init_model, inference_model
 
 from pydensecrf.utils import unary_from_labels, create_pairwise_bilateral, create_pairwise_gaussian
 from skimage.morphology import skeletonize
@@ -74,9 +74,9 @@ class DNNFunctions(object):
 
         self.SAMWindow = SAMWindow()
 
-        self.mmseg_config = 'D:/chalk/dnn/checkpoints/cgnet_2048x2048_60k_CrackAsCityscapes.py'
-        self.mmseg_checkpoint = 'D:/chalk/dnn/checkpoints/iter_60000.pth'
-        self.sam_checkpoint = 'D:\CHALK\dnn\checkpoints\sam_vit_h_4b8939.pth'
+        self.mmseg_config = 'dnn/configs/cgnet.py'
+        self.mmseg_checkpoint = 'dnn/checkpoints/cgnet.pth'
+        self.sam_checkpoint = 'dnn/checkpoints/sam_vit_h_4b8939.pth'
 
         self.scale = 1.0
 
@@ -107,7 +107,7 @@ class DNNFunctions(object):
             config_file (str): The path to the config file.
             checkpoint_file (str): The path to the checkpoint file.
         """
-        self.mmseg_model = init_segmentor(config_file, checkpoint_file, device='cuda:0')
+        self.mmseg_model = init_model(config_file, checkpoint_file, device='cuda:0')
 
     def inference_mmseg(self, img, do_crf=True):
         """
@@ -121,12 +121,16 @@ class DNNFunctions(object):
             mask (np.ndarray): The processed mask.
 
         """
+        # filter image size too small or too large
+        if img.shape[0] < 50 or img.shape[1] < 50 or img.shape[0] > 1000 or img.shape[1] > 1000:
+            return np.zeros((img.shape[0], img.shape[1]), dtype=np.uint8)
 
         img = self.cvtRGBATORGB(img)
 
-        result = inference_segmentor(self.mmseg_model, img)
+        result = inference_model(self.mmseg_model, img)
 
-        mask = result[0]
+        mask = result.pred_sem_seg.data.cpu().numpy()
+        mask = np.squeeze(mask)
 
         if do_crf:
             crf = self.applyDenseCRF(img, mask)
