@@ -16,7 +16,6 @@
 
 import sys
 import os
-import json
 
 import numpy as np
 
@@ -26,10 +25,10 @@ import mmcv
 
 os.environ["QT_FONT_DPI"] = "96" # FIX Problem for High DPI and Scale above 100%
 
-from PySide6.QtCore import *
+from PySide6.QtCore import Qt, QParallelAnimationGroup
 from PySide6.QtGui import QIcon, QCursor
 from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QHeaderView, QFileDialog, QSizePolicy
+    QApplication, QMainWindow, QHeaderView
 )
 
 from widgets import CustomGrip
@@ -197,7 +196,6 @@ class MainWindow(
         elif event.key() == 71 : # G key
             self.checkGrabCutButton()
         
-            
         elif event.key() == 16777249: # Ctrl key
             self.ControlKey = True
 
@@ -274,18 +272,14 @@ class MainWindow(
             scroll_value = self.ui.scrollAreaImage.verticalScrollBar().value()
             self.ui.scrollAreaImage.verticalScrollBar().setValue(scroll_value - self.mouseWheelAngleDelta)
 
-        
-    
-        
-
 if __name__ == "__main__":
 
-    os.system("pyside6-rcc -o resources_rc.py resources.qrc")  
-    os.system("pyside6-uic designs/main.ui -o modules/ui_main.py")  
-    os.system("pyside6-uic designs/project_name.ui -o modules/ui_project_name.py")  
-    os.system("pyside6-uic designs/brush_menu.ui -o modules/ui_brush_menu.py")  
-    os.system("pyside6-uic designs/project_class.ui -o modules/ui_project_class.py")  
-    os.system("pyside6-uic designs/thumbnail_window.ui -o modules/ui_thumbnail_window.py")  
+    # os.system("pyside6-rcc -o resources_rc.py resources.qrc")  
+    # os.system("pyside6-uic designs/main.ui -o modules/ui_main.py")  
+    # os.system("pyside6-uic designs/project_name.ui -o modules/ui_project_name.py")  
+    # os.system("pyside6-uic designs/brush_menu.ui -o modules/ui_brush_menu.py")  
+    # os.system("pyside6-uic designs/project_class.ui -o modules/ui_project_class.py")  
+    # os.system("pyside6-uic designs/thumbnail_window.ui -o modules/ui_thumbnail_window.py")  
     
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon("icon.ico"))

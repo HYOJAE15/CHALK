@@ -38,9 +38,9 @@ LICENSES = [
 
 CATEGORIES = []
 
-SOURCE_DIR = '//172.16.113.151/UOS-SSaS Dropbox/05. Data/02. Training&Test/013. General Concrete Damage/cityscapes/v0.1.1'
+SOURCE_DIR = r'\\172.16.113.151\UOS-SSaS Dropbox\05. Data\02. Training&Test\012. General_Crack\02. Negative Samples\v0.1.2'
 
-TARGET_DIR = '//172.16.113.151/UOS-SSaS Dropbox/05. Data/02. Training&Test/013. General Concrete Damage/coco_crack_only/v0.1.2'
+TARGET_DIR = r'\\172.16.113.151\UOS-SSaS Dropbox\05. Data\02. Training&Test\012. General_Crack\04. COCO(Only Crack)\v.0.1.1'
 
 SUBSET = 'val' # choose one of 'train', 'val', 'test'
 
@@ -55,7 +55,7 @@ CONVERT_STYLE = {
 
 CATEGORIES = []
 
-WINDOW_SIZE = 128
+WINDOW_SIZE = 256
 
 OVERLAP = 0.5
 
@@ -146,54 +146,57 @@ def create_overlap_annotation(coco_output, gt, img_id, width, height, class_idx,
 
         # else if bounding box is bigger than window size, create overlap annotation
         else:
-
-            _binary_mask = deepcopy(binary_mask)
             # coordinate of grid 
-            x = np.arange(minc, maxc, int(window_size * overlap))
-            y = np.arange(minr, maxr, int(window_size * overlap))
+            num_grid_x = int((maxc - minc) / (window_size * overlap)) + 1 
+            num_grid_y = int((maxr - minr) / (window_size * overlap)) + 1
 
-            # remove the pixels of binary_mask on the grid edge
-            for i in range(1, len(x), 2):
-                _binary_mask[:, x[i]] = 0
+            if (maxc - minc) > (maxr - minr):
+                num_grid_y = 1
+            else:
+                num_grid_x = 1
 
-            for i in range(1, len(y), 2):
-                _binary_mask[y[i], :] = 0
+            # create grid
+            grid_x = np.linspace(minc, maxc, num_grid_x, dtype=np.int, endpoint=False)
+            grid_y = np.linspace(minr, maxr, num_grid_y, dtype=np.int, endpoint=False)
 
-            # get label of binary_mask 
-            label_mask = label(_binary_mask)
-            
-            for label_idx in range(1, np.max(label_mask)+1):
-                label_obj = label_mask == label_idx
-
-                if np.sum(label_obj) > 50:
-
-                    annotation_info = create_annotation_info(
-                        segmentation_id, img_id, category_info, label_obj, (width, height), tolerance=2
-                        )
-
-                    if annotation_info is not None:
-                        coco_output["annotations"].append(annotation_info)
-
-                    segmentation_id += 1
-
+            # deepcopy binary_mask
             _binary_mask = deepcopy(binary_mask)
 
-            for i in range(2, len(x), 2):
-                _binary_mask[:, x[i]] = 0
+            # remove pixels on the grid line 
+            for i in range(0, len(grid_x), 2):
+                _binary_mask[:, grid_x[i]] = 0
 
-            for i in range(2, len(y), 2):
-                _binary_mask[y[i], :] = 0
+            for i in range(0, len(grid_y), 2):
+                _binary_mask[grid_y[i], :] = 0
 
-            # get label of binary_mask 
-            label_mask = label(_binary_mask)
-            
-            for label_idx in range(1, np.max(label_mask)+1):
-                label_obj = label_mask == label_idx
+            if len(grid_x) > 2: 
+                if len(grid_x) % 2 == 0:
+                    pass 
+                else:
+                    _binary_mask[:, grid_x[-1]:] = 0
 
-                if np.sum(label_obj) > 50:
+            if len(grid_y) > 2:
+                if len(grid_y) % 2 == 0:
+                    pass 
+                else:
+                    _binary_mask[grid_y[-1]:, :] = 0
 
+            _binary_label = label(_binary_mask)
+
+            for _label_idx in range(1, np.max(_binary_label)+1):
+                _binary_mask = _binary_label == _label_idx
+
+                # extract bounding box
+                _minr, _minc, _maxr, _maxc = regionprops(_binary_label)[_label_idx-1].bbox
+                # check bounding box size
+
+                # if bounding box is smaller than window size, create normal annotation
+                if (_maxr - _minr) > window_size or (_maxc - _minc) > window_size:
+                    coco_output, segmentation_id = create_overlap_annotation(coco_output, _binary_mask, img_id, width, height, class_idx, segmentation_id, window_size, overlap)
+
+                else: 
                     annotation_info = create_annotation_info(
-                        segmentation_id, img_id, category_info, label_obj, (width, height), tolerance=2
+                        segmentation_id, img_id, category_info, _binary_mask, (width, height), tolerance=2
                         )
 
                     if annotation_info is not None:
@@ -201,6 +204,46 @@ def create_overlap_annotation(coco_output, gt, img_id, width, height, class_idx,
 
                     segmentation_id += 1
 
+            # deepcopy binary_mask
+            _binary_mask = deepcopy(binary_mask)
+
+            # remove pixels on the grid line 
+            for i in range(1, len(grid_x), 2):
+                _binary_mask[:, grid_x[i]] = 0
+
+            for i in range(1, len(grid_y), 2):
+                _binary_mask[grid_y[i], :] = 0
+
+            if len(grid_x) > 2: 
+                _binary_mask[:, :grid_x[1]] = 0
+                if len(grid_x) % 2 == 0:
+                    _binary_mask[:, grid_x[-1]:] = 0
+                    
+
+            if len(grid_y) > 2:
+                _binary_mask[:grid_y[1], :] = 0
+                if len(grid_y) % 2 == 0:
+                    _binary_mask[grid_y[-1]:, :] = 0
+
+            _binary_label = label(_binary_mask)
+
+            for _label_idx in range(1, np.max(_binary_label)+1):
+                _binary_mask = _binary_label == _label_idx
+
+                _minr, _minc, _maxr, _maxc = regionprops(_binary_label)[_label_idx-1].bbox
+
+                if (_maxr - _minr) > window_size or (_maxc - _minc) > window_size:
+                    coco_output, segmentation_id = create_overlap_annotation(coco_output, _binary_mask, img_id, width, height, class_idx, segmentation_id, window_size, overlap)
+
+                else: 
+                    annotation_info = create_annotation_info(
+                        segmentation_id, img_id, category_info, _binary_mask, (width, height), tolerance=2
+                        )
+
+                    if annotation_info is not None:
+                        coco_output["annotations"].append(annotation_info)
+
+                    segmentation_id += 1
 
     return coco_output, segmentation_id
 
