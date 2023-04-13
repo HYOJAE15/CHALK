@@ -2,7 +2,7 @@
 
 ### Getting Started
 
-Please refer to [INSTALL.md](https://github.com/bhyun-kim/CHALK/blob/main/install.md) for installation instructions.
+Please refer to [install.md](https://github.com/bhyun-kim/CHALK/blob/main/install.md) for installation instructions.
 
 
 ### Acknowledgement

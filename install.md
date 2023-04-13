@@ -33,7 +33,9 @@ To install MMSegmentation and its required dependencies, run the following comma
 
 
 ```
-pip install -U openmim mim install mmcv mim install mmsegmentation
+pip install -U openmim
+mim install mmcv 
+mim install mmsegmentation
 ```
 
 4\. Install the Segment Anything Model from the FAIR GitHub Repository

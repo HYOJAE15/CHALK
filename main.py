@@ -25,7 +25,7 @@ import mmcv
 
 os.environ["QT_FONT_DPI"] = "96" # FIX Problem for High DPI and Scale above 100%
 
-from PySide6.QtCore import *
+from PySide6.QtCore import Qt, QParallelAnimationGroup
 from PySide6.QtGui import QIcon, QCursor
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QHeaderView
