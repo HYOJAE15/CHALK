@@ -6,7 +6,9 @@ from .ui_sam_window import Ui_SAMWindow
 from .ui_functions import UIFunctions
 from .app_settings import Settings
 
-from mmseg.apis import inference_segmentor, init_segmentor
+# import sys
+# sys.path.append("./dnn/mmsegmentation")
+from mmseg.apis import init_model, inference_model
 
 from pydensecrf.utils import unary_from_labels, create_pairwise_bilateral, create_pairwise_gaussian
 from skimage.morphology import skeletonize
@@ -107,7 +109,7 @@ class DNNFunctions(object):
             config_file (str): The path to the config file.
             checkpoint_file (str): The path to the checkpoint file.
         """
-        self.mmseg_model = init_segmentor(config_file, checkpoint_file, device='cuda:0')
+        self.mmseg_model = init_model(config_file, checkpoint_file, device='cuda:0')
 
     def inference_mmseg(self, img, do_crf=True):
         """
@@ -124,7 +126,7 @@ class DNNFunctions(object):
 
         img = self.cvtRGBATORGB(img)
 
-        result = inference_segmentor(self.mmseg_model, img)
+        result = inference_model(self.mmseg_model, img)
 
         mask = result[0]
 
