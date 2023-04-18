@@ -268,6 +268,11 @@ class ImageFunctions(DNNFunctions):
         return img_label_folder
     
     def addNewImage(self, event):
+        """
+
+
+        
+        """
 
         self.currentIndex = mainWidgets.treeView.currentIndex().data(QFileSystemModel.FilePathRole)
         
