@@ -191,7 +191,7 @@ class MainWindow(
             self.checkEnhancementButton()
 
         elif event.key() == 66 : # B key
-            self.checkBrushButton()
+            self.openBrushMenu()
         
         elif event.key() == 71 : # G key
             self.checkGrabCutButton()
@@ -271,6 +271,8 @@ class MainWindow(
         else : 
             scroll_value = self.ui.scrollAreaImage.verticalScrollBar().value()
             self.ui.scrollAreaImage.verticalScrollBar().setValue(scroll_value - self.mouseWheelAngleDelta)
+    
+    
 
 if __name__ == "__main__":
 
