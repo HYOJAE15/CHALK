@@ -10,6 +10,9 @@ from numba import njit
 
 from PySide6.QtGui import QImage
 
+import slidingwindow as sw 
+import math 
+
 
 def imread(path: str) -> np.array:
     img = cv2.imdecode(np.fromfile(path, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
@@ -106,3 +109,32 @@ def convertLabelToColorMap(
     colormap[:, :, 3] = alpha
 
     return colormap
+
+
+def generateForNumberOfWindows(data, dimOrder, windowCount, overlapPercent, transforms=[]):
+	"""
+	Generates a set of sliding windows for the specified dataset, automatically determining the required window size in
+	order to create the specified number of windows. `windowCount` must be a tuple specifying the desired number of windows
+	along the Y and X axes, in the form (countY, countX).
+	"""
+	
+	# Determine the dimensions of the input data
+	width = data.shape[dimOrder.index('w')]
+	height = data.shape[dimOrder.index('h')]
+	
+	# Determine the window size required to most closely match the desired window count along both axes
+	countY, countX = windowCount
+	windowSizeX = math.ceil(width / countX)
+	windowSizeY = math.ceil(height / countY)
+	
+	# Generate the windows
+	return sw.generateForSize(
+		width,
+		height,
+		dimOrder,
+		0,
+		overlapPercent,
+		transforms,
+		overrideWidth = windowSizeX,
+		overrideHeight = windowSizeY
+	)
