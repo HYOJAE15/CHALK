@@ -1,1 +1,1 @@
-pyinstaller main.py --onefile --hidden-import mmcv._ext --hidden-import pydensecrf.eigen
+pyinstaller main.py --hidden-import mmcv._ext --hidden-import pydensecrf.eigen

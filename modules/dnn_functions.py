@@ -170,7 +170,7 @@ class DNNFunctions(object):
                             normalization=dcrf.NORMALIZE_SYMMETRIC)
 
         # This creates the color-dependent features and then add them to the CRF
-        feats = create_pairwise_bilateral(sdims=(5, 5), schan=(5, 5, 5),
+        feats = create_pairwise_bilateral(sdims=(50, 50), schan=(13, 13, 13),
                                             img=img, chdim=2)
         d.addPairwiseEnergy(feats, compat=10,
                             kernel=dcrf.DIAG_KERNEL,

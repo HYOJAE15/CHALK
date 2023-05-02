@@ -38,11 +38,11 @@ LICENSES = [
 
 CATEGORIES = []
 
-SOURCE_DIR = r'\\172.16.113.151\UOS-SSaS Dropbox\05. Data\02. Training&Test\012. General_Crack\02. Negative Samples\v0.1.2'
+SOURCE_DIR = r'\\172.16.113.151\UOS-SSaS Dropbox\05. Data\02. Training&Test\2000. BKim Thesis\01. Pure Positives\01. Cityscapes'
 
-TARGET_DIR = r'\\172.16.113.151\UOS-SSaS Dropbox\05. Data\02. Training&Test\012. General_Crack\04. COCO(Only Crack)\v.0.1.1'
+TARGET_DIR = r'\\172.16.113.151\UOS-SSaS Dropbox\05. Data\02. Training&Test\2000. BKim Thesis\01. Pure Positives\02. COCO'
 
-SUBSET = 'val' # choose one of 'train', 'val', 'test'
+SUBSET = 'train' # choose one of 'train', 'val', 'test'
 
 CLASSES = ['crack'] #, 'effl', 'rebar', 'spall']
 
@@ -58,6 +58,8 @@ CATEGORIES = []
 WINDOW_SIZE = 256
 
 OVERLAP = 0.5
+
+DIALATE = True
 
 for i, name in enumerate(CLASSES):
     cat = {'id': i, 'name': name, 'supercategory': 'concrete_damage'}
@@ -289,6 +291,9 @@ def main():
         gt_path = gt_path.replace("leftImg8bit", "gtFine")
         
         gt = cv2.imread(gt_path, cv2.IMREAD_UNCHANGED)
+        # dilate gt
+        if DIALATE:
+            gt = cv2.dilate(gt, np.ones((3, 3), np.uint8), iterations=1)
 
         for class_idx, class_name in enumerate(CLASSES):
 
