@@ -67,17 +67,26 @@ class ImageFunctions(DNNFunctions):
         mainWidgets.mainImageViewer.mouseReleaseEvent = self._mouseReleasePoint
         mainWidgets.mainImageViewer.mouseDoubleClickEvent = self._mouseDoubleClick
 
+        
+        mainWidgets.addImageButton.clicked.connect(self.addNewImage)
+        mainWidgets.deleteImageButton.clicked.connect(self.deleteImage)
+
+        
+        self.sam_mode = False
+
+
+        """
+        Brush Tool
+        """
         mainWidgets.brushButton.clicked.connect(self.openBrushMenu)
 
         self.BrushMenu = BrushMenuWindow()
         self.BrushMenu.ui.brushSizeSlider.valueChanged.connect(self.changeBrushSize)
 
-        mainWidgets.addImageButton.clicked.connect(self.addNewImage)
-        mainWidgets.deleteImageButton.clicked.connect(self.deleteImage)
-
-        self.use_brush = True
-        self.sam_mode = False
-
+        self.use_brush = False
+        
+        
+        
         """
         Autolabel Tool
         """
@@ -215,6 +224,7 @@ class ImageFunctions(DNNFunctions):
             self.load_mmseg(self.mmseg_config, self.mmseg_checkpoint)
         else:
             self.load_sam(self.sam_checkpoint)
+            print(f"SAM: {self.brush_class}")
 
     def checkEnhancementButton(self):
         """
@@ -239,10 +249,25 @@ class ImageFunctions(DNNFunctions):
         
     def openBrushMenu(self):
         """
-        Open brush menu
+        Open or Close brush menu
         """
-        self.BrushMenu.show()
-        self.checkBrushButton()
+        if self.use_brush == False:
+            self.BrushMenu.show()
+            self.set_button_state(use_brush=True)
+
+        elif self.use_brush == True:
+            self.BrushMenu.close()
+            self.set_button_state()
+            
+        
+    def closeBrushMenu (self):
+        """
+        close brush menu
+        """
+        self.BrushMenu.close()
+        self.set_button_state(use_brush=False)
+        
+        
 
     def changeBrushSize(self, value):
         self.brushSize = value
@@ -268,6 +293,11 @@ class ImageFunctions(DNNFunctions):
         return img_label_folder
     
     def addNewImage(self, event):
+        """
+
+
+        
+        """
 
         self.currentIndex = mainWidgets.treeView.currentIndex().data(QFileSystemModel.FilePathRole)
         
@@ -484,6 +514,7 @@ class ImageFunctions(DNNFunctions):
                 max_y = y
 
             img_roi = img[min_y:max_y, min_x:max_x, :3]
+            cv2.imshow("cropImage", img_roi)
             
             if self.brush_class == 0:
                 pass 
@@ -513,9 +544,19 @@ class ImageFunctions(DNNFunctions):
 
                     self.sam_y_idx = []
                     self.sam_x_idx = []
-                    
+                
+                src = cv2.cvtColor(img_roi, cv2.COLOR_BGR2GRAY)
+                dst = cv2.equalizeHist(src)
+                cv2.imshow("equalizeHist", dst)
 
-                self.sam_predictor.set_image(img_roi)
+                dst_bgr = cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR)
+
+                cv2.imshow("equalizeHist_bgr", dst_bgr)
+                print(f"{type(img_roi)}, {img_roi}, {img_roi.shape}")
+                print(f"{type(dst)}, {dst}, {dst.shape}")
+                print(f"{type(dst_bgr)}, {dst_bgr}, {dst_bgr.shape}")
+                self.sam_predictor.set_image(dst_bgr)
+                
 
                 # save min_x, min_y, max_x, max_y for SAM
                 self.sam_min_x = min_x
@@ -575,9 +616,12 @@ class ImageFunctions(DNNFunctions):
 
         # Get the brush class
         self.brush_class = mainWidgets.classList.currentRow()
+        print(f"brush_class(mainimageViewer): {self.brush_class}")
 
         event_global = mainWidgets.mainImageViewer.mapFromGlobal(event.globalPos())
+        print(f"event_global: {event_global}")
         x, y = getScaledPoint(event_global, self.scale)
+        print(f"x, y: {(x, y)}")
 
         self.x = x
         self.y = y
