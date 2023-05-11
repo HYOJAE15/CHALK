@@ -38,13 +38,13 @@ LICENSES = [
 
 CATEGORIES = []
 
-SOURCE_DIR = r'\\172.16.113.151\UOS-SSaS Dropbox\05. Data\02. Training&Test\2000. BKim Thesis\01. Pure Positives\01. Cityscapes'
+SOURCE_DIR = r'\\172.16.113.170\UOS-SSaS Dropbox\05. Data\02. Training&Test\013. General Concrete Damage\01. Cityscapes\v0.1.3'
 
-TARGET_DIR = r'\\172.16.113.151\UOS-SSaS Dropbox\05. Data\02. Training&Test\2000. BKim Thesis\01. Pure Positives\02. COCO'
+TARGET_DIR = r'\\172.16.113.170\UOS-SSaS Dropbox\05. Data\02. Training&Test\013. General Concrete Damage\05. COCO(test)\ver.0.3'
 
 SUBSET = 'train' # choose one of 'train', 'val', 'test'
 
-CLASSES = ['crack'] #, 'effl', 'rebar', 'spall']
+CLASSES = ['crack', 'spall'] #, 'effl', 'rebar', 'spall']
 
 CONVERT_STYLE = {
     'crack' : 'overlap',
@@ -65,7 +65,7 @@ for i, name in enumerate(CLASSES):
     cat = {'id': i, 'name': name, 'supercategory': 'concrete_damage'}
     CATEGORIES.append(cat)
 
-def create_normal_annotation(coco_output, gt, img_id, width, height, class_idx, segmentation_id):
+def create_normal_annotation(coco_output, gt, img_id, width, height, class_idx, segmentation_id, num_classes, class_name):
     """
     Create normal annotation (without overalapping)
     Args:
@@ -76,16 +76,22 @@ def create_normal_annotation(coco_output, gt, img_id, width, height, class_idx, 
         height: height of the image
         class_idx: class index
         segmentation_id: segmentation id
+        num_classes: 
 
     Returns:
         coco_output: coco output
         segmentation_id: segmentation id
     """
 
+
     gt_label = label(gt == class_idx)
 
-    category_info = {'id': class_idx - 1, 'is_crowd': 0}
+    cat_id_idx = CLASSES.index(class_name)
+    
+    
+    category_info = {'id': cat_id_idx, 'is_crowd': 0}
 
+    
     for label_idx in range(1, np.max(gt_label)+1):
         binary_mask = gt_label == label_idx
 
@@ -100,7 +106,7 @@ def create_normal_annotation(coco_output, gt, img_id, width, height, class_idx, 
 
     return coco_output, segmentation_id
 
-def create_overlap_annotation(coco_output, gt, img_id, width, height, class_idx, segmentation_id, window_size = 256, overlap = 0.5):
+def create_overlap_annotation(coco_output, gt, img_id, width, height, class_idx, segmentation_id, num_classes, class_name, window_size = 256, overlap = 0.5):
     """
     Create overlap annotation
     Args:
@@ -121,8 +127,10 @@ def create_overlap_annotation(coco_output, gt, img_id, width, height, class_idx,
     gt_label = label(gt == class_idx)
     # get regionprops
     props = regionprops(gt_label)
-
-    category_info = {'id': class_idx - 1, 'is_crowd': 0}
+    
+    cat_id_idx = CLASSES.index(class_name)
+    
+    category_info = {'id': cat_id_idx, 'is_crowd': 0}
 
     for label_idx in range(1, np.max(gt_label)+1):
         binary_mask = gt_label == label_idx
@@ -194,7 +202,7 @@ def create_overlap_annotation(coco_output, gt, img_id, width, height, class_idx,
 
                 # if bounding box is smaller than window size, create normal annotation
                 if (_maxr - _minr) > window_size or (_maxc - _minc) > window_size:
-                    coco_output, segmentation_id = create_overlap_annotation(coco_output, _binary_mask, img_id, width, height, class_idx, segmentation_id, window_size, overlap)
+                    coco_output, segmentation_id = create_overlap_annotation(coco_output, _binary_mask, img_id, width, height, class_idx, segmentation_id, num_classes, class_name, window_size, overlap)
 
                 else: 
                     annotation_info = create_annotation_info(
@@ -235,7 +243,7 @@ def create_overlap_annotation(coco_output, gt, img_id, width, height, class_idx,
                 _minr, _minc, _maxr, _maxc = regionprops(_binary_label)[_label_idx-1].bbox
 
                 if (_maxr - _minr) > window_size or (_maxc - _minc) > window_size:
-                    coco_output, segmentation_id = create_overlap_annotation(coco_output, _binary_mask, img_id, width, height, class_idx, segmentation_id, window_size, overlap)
+                    coco_output, segmentation_id = create_overlap_annotation(coco_output, _binary_mask, img_id, width, height, class_idx, segmentation_id, num_classes, class_name, window_size, overlap)
 
                 else: 
                     annotation_info = create_annotation_info(
@@ -295,16 +303,45 @@ def main():
         if DIALATE:
             gt = cv2.dilate(gt, np.ones((3, 3), np.uint8), iterations=1)
 
-        for class_idx, class_name in enumerate(CLASSES):
+        for class_idx, class_name in enumerate(CLASSES, start=1):
 
-            class_idx += 1
+            
+            if class_name == 'crack' :
+                class_idx = 1
+            elif class_name == 'effl' :
+                class_idx = 2
+            elif class_name == 'rebar' :
+                class_idx = 3
+            elif class_name == 'spall' :
+                class_idx = 4
+
             convert_style = CONVERT_STYLE[class_name]
 
+            num_classes = len(CLASSES)
+
             if convert_style == 'normal':
-                coco_output, segmentation_id = create_normal_annotation(coco_output, gt, new_img_id, img.shape[1], img.shape[0], class_idx, segmentation_id)                
+                coco_output, segmentation_id = create_normal_annotation(coco_output, 
+                                                                        gt, 
+                                                                        new_img_id, 
+                                                                        img.shape[1], 
+                                                                        img.shape[0], 
+                                                                        class_idx, 
+                                                                        segmentation_id, 
+                                                                        num_classes, 
+                                                                        class_name = class_name)                
 
             elif convert_style == 'overlap':
-                coco_output, segmentation_id = create_overlap_annotation(coco_output, gt, new_img_id, img.shape[1], img.shape[0], class_idx, segmentation_id, window_size=WINDOW_SIZE, overlap=OVERLAP)
+                coco_output, segmentation_id = create_overlap_annotation(coco_output, 
+                                                                         gt, 
+                                                                         new_img_id, 
+                                                                         img.shape[1], 
+                                                                         img.shape[0], 
+                                                                         class_idx, 
+                                                                         segmentation_id, 
+                                                                         num_classes, 
+                                                                         class_name = class_name, 
+                                                                         window_size=WINDOW_SIZE, 
+                                                                         overlap=OVERLAP)
 
             if np.sum(gt == class_idx) > 0:
                 shutil.copy(img_path, target_img_path)

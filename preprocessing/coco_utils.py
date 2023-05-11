@@ -187,17 +187,27 @@ class CocoDataset():
         ax.axis('off')
 
         brightness = 0.7
+        print(f"self.categories: {self.categories}")
         n_class = len(self.categories)
         hsv = [(i / n_class, 1, brightness) for i in range(n_class)]
         colors = list(map(lambda c: colorsys.hsv_to_rgb(*c), hsv))
 
         masked_image = image.copy()
+        
+        print(f"bboxes.items(): {bboxes.items()}")
+        print(f"colors: {colors}")
+        print(f"annot_categories: {annot_categories}")
+        # edge_color_check = colors[annot_categories[0]]
+        # print(edge_color_check)
 
         # Draw shapes on image
         if show_bbox:
             for seg_id, bbox in bboxes.items():
-
+                
+                print(f"seg_id: {seg_id}")
+                print(f"bbox: {bbox}")
                 edge_color = colors[annot_categories[seg_id]]
+                print(f"edge_color: {edge_color}")
 
                 bbox = np.asarray(bbox)
                 x, y, w, h = bbox[0], bbox[1], bbox[2], bbox[3]
