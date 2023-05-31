@@ -4,6 +4,7 @@ os.environ['OPENCV_IO_MAX_IMAGE_PIXELS'] = pow(2,40).__str__()
 
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import  QPixmap
@@ -18,7 +19,9 @@ from .app_settings import Settings
 from .dnn_functions import DNNFunctions
 
 from .utils import imread, cvtArrayToQImage, cvtPixmapToArray, convertLabelToColorMap
-from .utils_img import getScaledPoint, getCoordBTWTwoPoints, applyBrushSize, readImageToPixmap
+from .utils_img import (
+    getScaledPoint, getCoordBTWTwoPoints, applyBrushSize, readImageToPixmap, histEqualization_gr, histEqualization_hsv, histEqualization_ycc
+)
 
 import skimage.measure
 import skimage.filters
@@ -371,6 +374,18 @@ class ImageFunctions(DNNFunctions):
         self.pixmap = readImageToPixmap(self.imgPath)        
         
         self.label = imread(self.labelPath)
+        print(type(self.label))
+        print(f"label member: {np.unique(self.label)}")
+        
+
+        # cv2.imshow("label", self.label)
+        # print(self.labelPath)
+        # test=cv2.imread(self.labelPath)
+        # print(type(test))
+        # plt.imshow(test)
+        # plt.show()
+
+        
 
         self.colormap = convertLabelToColorMap(self.label, self.label_palette, self.alpha)
         self.color_pixmap = QPixmap(cvtArrayToQImage(self.colormap))
@@ -441,6 +456,9 @@ class ImageFunctions(DNNFunctions):
         self.x = x
         self.y = y
 
+    
+    
+    
     def drawRectangle(self, event):
 
         event_global = mainWidgets.mainImageViewer.mapFromGlobal(event.globalPos())
@@ -498,6 +516,7 @@ class ImageFunctions(DNNFunctions):
             
             # get the region of interest
             img = cvtPixmapToArray(self.pixmap)
+            cv2.imshow("check_img", img)
 
             if self.fixed_x > x :
                 min_x = x
@@ -514,7 +533,7 @@ class ImageFunctions(DNNFunctions):
                 max_y = y
 
             img_roi = img[min_y:max_y, min_x:max_x, :3]
-            cv2.imshow("cropImage", img_roi)
+            # cv2.imshow("cropImage", img_roi)
             
             if self.brush_class == 0:
                 pass 
@@ -545,16 +564,7 @@ class ImageFunctions(DNNFunctions):
                     self.sam_y_idx = []
                     self.sam_x_idx = []
                 
-                src = cv2.cvtColor(img_roi, cv2.COLOR_BGR2GRAY)
-                dst = cv2.equalizeHist(src)
-                cv2.imshow("equalizeHist", dst)
-
-                dst_bgr = cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR)
-
-                cv2.imshow("equalizeHist_bgr", dst_bgr)
-                print(f"{type(img_roi)}, {img_roi}, {img_roi.shape}")
-                print(f"{type(dst)}, {dst}, {dst.shape}")
-                print(f"{type(dst_bgr)}, {dst_bgr}, {dst_bgr.shape}")
+                dst_bgr = histEqualization_hsv(img_roi)
                 self.sam_predictor.set_image(dst_bgr)
                 
 
