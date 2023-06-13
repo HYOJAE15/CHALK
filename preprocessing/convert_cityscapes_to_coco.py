@@ -38,9 +38,9 @@ LICENSES = [
 
 CATEGORIES = []
 
-SOURCE_DIR = r'\\172.16.113.170\UOS-SSaS Dropbox\05. Data\02. Training&Test\013. General Concrete Damage\01. Cityscapes\v0.1.3'
+SOURCE_DIR = r'\\172.16.113.153\UOS-SSaS Dropbox\05. Data\02. Training&Test\013. General Concrete Damage\01. Cityscapes\v0.1.3'
 
-TARGET_DIR = r'\\172.16.113.170\UOS-SSaS Dropbox\05. Data\02. Training&Test\013. General Concrete Damage\05. COCO(test)\ver.0.3'
+TARGET_DIR = r'\\172.16.113.153\UOS-SSaS Dropbox\05. Data\02. Training&Test\013. General Concrete Damage\05. COCO(test)\ver.0.4'
 
 SUBSET = 'train' # choose one of 'train', 'val', 'test'
 
@@ -286,7 +286,7 @@ def main():
     new_img_id = 1
 
     # add tqdm and description
-    for img_id, img_path in tqdm(enumerate(img_list), desc="Creating COCO dataset"):
+    for img_id, img_path in enumerate(tqdm(img_list, desc="Creating COCO dataset")):
 
         # read images 
         img = cv2.imread(img_path)
