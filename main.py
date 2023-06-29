@@ -106,8 +106,7 @@ class MainWindow(
         widgets.projectButton.clicked.connect(self.openProjectMenu)
         widgets.closeProjectButton.clicked.connect(self.openProjectMenu)
         
-        widgets.eraseButton.clicked.connect(self.openErase)
-
+        
         """
         Extra Events 
         """
@@ -135,9 +134,7 @@ class MainWindow(
         self.group.addAnimation(project_animation)
         self.group.addAnimation(image_animation)
         self.group.start()
-    def openErase(self):
-        print(f"Erase!")
-
+    
     def openImageMenu(self):
 
         btn = self.sender()

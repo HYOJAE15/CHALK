@@ -53,7 +53,7 @@ class EraseMenuWindow(QMainWindow, UIFunctions):
 
         self.ui = Ui_EraseMenu()
         self.ui.setupUi(self)
-        self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
 
         self.settings = Settings()
 
@@ -342,12 +342,7 @@ class ImageFunctions(DNNFunctions):
         return img_label_folder
     
     def addNewImage(self, event):
-        """
-
-
         
-        """
-
         self.currentIndex = mainWidgets.treeView.currentIndex().data(QFileSystemModel.FilePathRole)
         
         self.imgFolderPath, filename = os.path.split(self.currentIndex)
@@ -386,7 +381,7 @@ class ImageFunctions(DNNFunctions):
             _, gt_img = cv2.imencode(".png", gt)
             gt_img.tofile(os.path.join(img_label_folder, img_gt_filename))
 
-        self.resetTreeView(refreshIndex=True)
+        # self.resetTreeView(refreshIndex=True)
 
         
     def resetTreeView(self, refreshIndex = False):

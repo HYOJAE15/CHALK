@@ -103,10 +103,12 @@ class ProjectFunctions(object):
     def selectProjectFolder(self):
         self.project_folder = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
         self.ProjectName.ui.lineFolder.setText(self.project_folder)
+        self.ProjectName.close()
+        self.ProjectName.show()
     
     def openProjectClassDialogue(self):
 
-        self.project_name = self.ProjectName.ui.lineProjectName.text()
+        self.project_name = self.ProjectName.ui.datasetComboBox.currentText()
         self.new_project_info['project_name'] = self.project_name
         self.new_project_info['project_folder'] = self.project_folder
         self.ProjectName.close()
