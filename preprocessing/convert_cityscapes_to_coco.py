@@ -38,11 +38,11 @@ LICENSES = [
 
 CATEGORIES = []
 
-SOURCE_DIR = r'\\172.16.113.153\UOS-SSaS Dropbox\05. Data\02. Training&Test\013. General Concrete Damage\01. Cityscapes\v0.1.3'
+SOURCE_DIR = 'Z:/05. Data/03. Checkpoints/SBA/detection/23.06.21_fasterrccnn_conDamageDetection_1024x1024/testset_v8'
 
-TARGET_DIR = r'\\172.16.113.153\UOS-SSaS Dropbox\05. Data\02. Training&Test\013. General Concrete Damage\05. COCO(test)\ver.0.4'
+TARGET_DIR = 'Z:/05. Data/02. Training&Test/013. General Concrete Damage/05. COCO(test)/ver.0.7/coco_test_v8'
 
-SUBSET = 'train' # choose one of 'train', 'val', 'test'
+SUBSET = 'test' # choose one of 'train', 'val', 'test'
 
 CLASSES = ['crack', 'spall'] #, 'effl', 'rebar', 'spall']
 
@@ -344,6 +344,7 @@ def main():
                                                                          overlap=OVERLAP)
 
             if np.sum(gt == class_idx) > 0:
+                # print(f"img: {img_path}, target img:{target_img_path}")
                 shutil.copy(img_path, target_img_path)
                 # create image info
                 
