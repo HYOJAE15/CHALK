@@ -105,6 +105,8 @@ class MainWindow(
 
         widgets.projectButton.clicked.connect(self.openProjectMenu)
         widgets.closeProjectButton.clicked.connect(self.openProjectMenu)
+        
+        widgets.eraseButton.clicked.connect(self.openErase)
 
         """
         Extra Events 
@@ -133,6 +135,8 @@ class MainWindow(
         self.group.addAnimation(project_animation)
         self.group.addAnimation(image_animation)
         self.group.start()
+    def openErase(self):
+        print(f"Erase!")
 
     def openImageMenu(self):
 
@@ -188,7 +192,7 @@ class MainWindow(
             self.checkAutoLabelButton()
 
         elif event.key() == 69 : # E key
-            self.checkEnhancementButton()
+            self.openEraseMenu()
 
         elif event.key() == 66 : # B key
             self.openBrushMenu()
@@ -206,12 +210,21 @@ class MainWindow(
         elif event.key() == 72: # H key
             # activate scroll move mode 
             self.scrollMove = True
+            print(f"activate H")
+
+        else :
+            print(event.key())
             
     def keyReleaseEvent(self, event):
         # zoom
-        if event.key() == 16777249:
+        if event.key() == 16777249: # ctrl key
             self.ControlKey = False
 
+        elif event.key() == 72: # H key
+            # deactivate scroll move mode 
+            self.scrollMove = False
+            print(f"deactivate H")
+     
         elif event.key() == 77:
             self.sam_mode = False
             print(self.sam_mode)

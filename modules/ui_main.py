@@ -967,29 +967,18 @@ class Ui_MainWindow(object):
         palette.setBrush(QPalette.Active, QPalette.ButtonText, brush)
         palette.setBrush(QPalette.Active, QPalette.Base, brush1)
         palette.setBrush(QPalette.Active, QPalette.Window, brush1)
-        brush2 = QBrush(QColor(221, 221, 221, 128))
-        brush2.setStyle(Qt.SolidPattern)
-#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
-        palette.setBrush(QPalette.Active, QPalette.PlaceholderText, brush2)
-#endif
         palette.setBrush(QPalette.Inactive, QPalette.WindowText, brush)
         palette.setBrush(QPalette.Inactive, QPalette.Button, brush1)
         palette.setBrush(QPalette.Inactive, QPalette.Text, brush)
         palette.setBrush(QPalette.Inactive, QPalette.ButtonText, brush)
         palette.setBrush(QPalette.Inactive, QPalette.Base, brush1)
         palette.setBrush(QPalette.Inactive, QPalette.Window, brush1)
-#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
-        palette.setBrush(QPalette.Inactive, QPalette.PlaceholderText, brush2)
-#endif
         palette.setBrush(QPalette.Disabled, QPalette.WindowText, brush)
         palette.setBrush(QPalette.Disabled, QPalette.Button, brush1)
         palette.setBrush(QPalette.Disabled, QPalette.Text, brush)
         palette.setBrush(QPalette.Disabled, QPalette.ButtonText, brush)
         palette.setBrush(QPalette.Disabled, QPalette.Base, brush1)
         palette.setBrush(QPalette.Disabled, QPalette.Window, brush1)
-#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
-        palette.setBrush(QPalette.Disabled, QPalette.PlaceholderText, brush2)
-#endif
         self.closeImageButton.setPalette(palette)
         font3 = QFont()
         font3.setFamilies([u"Segoe UI"])
@@ -1152,27 +1141,18 @@ class Ui_MainWindow(object):
         palette1.setBrush(QPalette.Active, QPalette.ButtonText, brush)
         palette1.setBrush(QPalette.Active, QPalette.Base, brush1)
         palette1.setBrush(QPalette.Active, QPalette.Window, brush1)
-#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
-        palette1.setBrush(QPalette.Active, QPalette.PlaceholderText, brush2)
-#endif
         palette1.setBrush(QPalette.Inactive, QPalette.WindowText, brush)
         palette1.setBrush(QPalette.Inactive, QPalette.Button, brush1)
         palette1.setBrush(QPalette.Inactive, QPalette.Text, brush)
         palette1.setBrush(QPalette.Inactive, QPalette.ButtonText, brush)
         palette1.setBrush(QPalette.Inactive, QPalette.Base, brush1)
         palette1.setBrush(QPalette.Inactive, QPalette.Window, brush1)
-#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
-        palette1.setBrush(QPalette.Inactive, QPalette.PlaceholderText, brush2)
-#endif
         palette1.setBrush(QPalette.Disabled, QPalette.WindowText, brush)
         palette1.setBrush(QPalette.Disabled, QPalette.Button, brush1)
         palette1.setBrush(QPalette.Disabled, QPalette.Text, brush)
         palette1.setBrush(QPalette.Disabled, QPalette.ButtonText, brush)
         palette1.setBrush(QPalette.Disabled, QPalette.Base, brush1)
         palette1.setBrush(QPalette.Disabled, QPalette.Window, brush1)
-#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
-        palette1.setBrush(QPalette.Disabled, QPalette.PlaceholderText, brush2)
-#endif
         self.closeProjectButton.setPalette(palette1)
         self.closeProjectButton.setFont(font3)
         self.closeProjectButton.setCursor(QCursor(Qt.PointingHandCursor))
@@ -1703,40 +1683,31 @@ class Ui_MainWindow(object):
         self.tableWidget.setSizePolicy(sizePolicy6)
         palette2 = QPalette()
         palette2.setBrush(QPalette.Active, QPalette.WindowText, brush)
-        brush3 = QBrush(QColor(0, 0, 0, 0))
-        brush3.setStyle(Qt.SolidPattern)
-        palette2.setBrush(QPalette.Active, QPalette.Button, brush3)
+        brush2 = QBrush(QColor(0, 0, 0, 0))
+        brush2.setStyle(Qt.SolidPattern)
+        palette2.setBrush(QPalette.Active, QPalette.Button, brush2)
         palette2.setBrush(QPalette.Active, QPalette.Text, brush)
         palette2.setBrush(QPalette.Active, QPalette.ButtonText, brush)
-        brush4 = QBrush(QColor(0, 0, 0, 255))
-        brush4.setStyle(Qt.NoBrush)
-        palette2.setBrush(QPalette.Active, QPalette.Base, brush4)
-        palette2.setBrush(QPalette.Active, QPalette.Window, brush3)
-#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
-        palette2.setBrush(QPalette.Active, QPalette.PlaceholderText, brush2)
-#endif
+        brush3 = QBrush(QColor(0, 0, 0, 255))
+        brush3.setStyle(Qt.NoBrush)
+        palette2.setBrush(QPalette.Active, QPalette.Base, brush3)
+        palette2.setBrush(QPalette.Active, QPalette.Window, brush2)
         palette2.setBrush(QPalette.Inactive, QPalette.WindowText, brush)
-        palette2.setBrush(QPalette.Inactive, QPalette.Button, brush3)
+        palette2.setBrush(QPalette.Inactive, QPalette.Button, brush2)
         palette2.setBrush(QPalette.Inactive, QPalette.Text, brush)
         palette2.setBrush(QPalette.Inactive, QPalette.ButtonText, brush)
-        brush5 = QBrush(QColor(0, 0, 0, 255))
-        brush5.setStyle(Qt.NoBrush)
-        palette2.setBrush(QPalette.Inactive, QPalette.Base, brush5)
-        palette2.setBrush(QPalette.Inactive, QPalette.Window, brush3)
-#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
-        palette2.setBrush(QPalette.Inactive, QPalette.PlaceholderText, brush2)
-#endif
+        brush4 = QBrush(QColor(0, 0, 0, 255))
+        brush4.setStyle(Qt.NoBrush)
+        palette2.setBrush(QPalette.Inactive, QPalette.Base, brush4)
+        palette2.setBrush(QPalette.Inactive, QPalette.Window, brush2)
         palette2.setBrush(QPalette.Disabled, QPalette.WindowText, brush)
-        palette2.setBrush(QPalette.Disabled, QPalette.Button, brush3)
+        palette2.setBrush(QPalette.Disabled, QPalette.Button, brush2)
         palette2.setBrush(QPalette.Disabled, QPalette.Text, brush)
         palette2.setBrush(QPalette.Disabled, QPalette.ButtonText, brush)
-        brush6 = QBrush(QColor(0, 0, 0, 255))
-        brush6.setStyle(Qt.NoBrush)
-        palette2.setBrush(QPalette.Disabled, QPalette.Base, brush6)
-        palette2.setBrush(QPalette.Disabled, QPalette.Window, brush3)
-#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
-        palette2.setBrush(QPalette.Disabled, QPalette.PlaceholderText, brush2)
-#endif
+        brush5 = QBrush(QColor(0, 0, 0, 255))
+        brush5.setStyle(Qt.NoBrush)
+        palette2.setBrush(QPalette.Disabled, QPalette.Base, brush5)
+        palette2.setBrush(QPalette.Disabled, QPalette.Window, brush2)
         self.tableWidget.setPalette(palette2)
         self.tableWidget.setFrameShape(QFrame.NoFrame)
         self.tableWidget.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
@@ -1795,12 +1766,12 @@ class Ui_MainWindow(object):
         sizePolicy3.setHeightForWidth(self.mainImageViewer.sizePolicy().hasHeightForWidth())
         self.mainImageViewer.setSizePolicy(sizePolicy3)
         self.mainImageViewer.setLineWidth(0)
+        brush6 = QBrush(QColor(255, 0, 0, 255))
+        brush6.setStyle(Qt.NoBrush)
+        self.mainImageViewer.setBackgroundBrush(brush6)
         brush7 = QBrush(QColor(255, 0, 0, 255))
         brush7.setStyle(Qt.NoBrush)
-        self.mainImageViewer.setBackgroundBrush(brush7)
-        brush8 = QBrush(QColor(255, 0, 0, 255))
-        brush8.setStyle(Qt.NoBrush)
-        self.mainImageViewer.setForegroundBrush(brush8)
+        self.mainImageViewer.setForegroundBrush(brush7)
 
         self.gridLayout_5.addWidget(self.mainImageViewer, 0, 0, 1, 1)
 
@@ -1908,25 +1879,25 @@ class Ui_MainWindow(object):
 
         self.gridLayout_3.addWidget(self.brushButton, 0, 0, 1, 1)
 
-        self.grabCutButton = QPushButton(self.toolBoxButtonFrame)
-        self.grabCutButton.setObjectName(u"grabCutButton")
-        sizePolicy1.setHeightForWidth(self.grabCutButton.sizePolicy().hasHeightForWidth())
-        self.grabCutButton.setSizePolicy(sizePolicy1)
-        self.grabCutButton.setMinimumSize(QSize(0, 30))
-        self.grabCutButton.setFont(font)
-        self.grabCutButton.setCursor(QCursor(Qt.PointingHandCursor))
-        self.grabCutButton.setStyleSheet(u".QPushButton { background-color: rgb(52, 59, 72); border: none;  border-radius: 5px; }\n"
+        self.eraseButton = QPushButton(self.toolBoxButtonFrame)
+        self.eraseButton.setObjectName(u"eraseButton")
+        sizePolicy1.setHeightForWidth(self.eraseButton.sizePolicy().hasHeightForWidth())
+        self.eraseButton.setSizePolicy(sizePolicy1)
+        self.eraseButton.setMinimumSize(QSize(0, 30))
+        self.eraseButton.setFont(font)
+        self.eraseButton.setCursor(QCursor(Qt.PointingHandCursor))
+        self.eraseButton.setStyleSheet(u".QPushButton { background-color: rgb(52, 59, 72); border: none;  border-radius: 5px; }\n"
 ".QPushButton:hover { background-color: rgb(44, 49, 57); border-style: solid; border-radius: 4px; }\n"
 ".QPushButton:pressed { background-color: rgb(23, 26, 30); border-style: solid; border-radius: 4px; }\n"
 ".QPushButton:checked { background-color: rgb(23, 26, 30); border-style: solid; border-radius: 4px; }\n"
 "")
         icon9 = QIcon()
         icon9.addFile(u":/icons/images/icons/icon-eraser.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.grabCutButton.setIcon(icon9)
-        self.grabCutButton.setCheckable(True)
-        self.grabCutButton.setChecked(False)
+        self.eraseButton.setIcon(icon9)
+        self.eraseButton.setCheckable(True)
+        self.eraseButton.setChecked(False)
 
-        self.gridLayout_3.addWidget(self.grabCutButton, 0, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.eraseButton, 0, 1, 1, 1)
 
         self.autoLabelButton = QPushButton(self.toolBoxButtonFrame)
         self.autoLabelButton.setObjectName(u"autoLabelButton")
@@ -2114,6 +2085,7 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
 
         self.stackedWidget.setCurrentIndex(2)
+        self.classList.setCurrentRow(-1)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -2138,22 +2110,19 @@ class Ui_MainWindow(object):
         self.btn_adjustments.setText(QCoreApplication.translate("MainWindow", u"Adjustments", None))
         self.btn_more.setText(QCoreApplication.translate("MainWindow", u"More", None))
         self.textEdit.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
-"hr { height: 1px; border-width: 0; }\n"
-"li.unchecked::marker { content: \"\\2610\"; }\n"
-"li.checked::marker { content: \"\\2612\"; }\n"
 "</style></head><body style=\" font-family:'Segoe UI'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
 "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600; color:#ff79c6;\">PyDracula</span></p>\n"
-"<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" color:#ffffff;\">An interface created using Python and PySide (support for PyQt), and with colors based on the Dracula theme created by Zen"
-                        "o Rocha.</span></p>\n"
-"<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" color:#ffffff;\">MIT License</span></p>\n"
+"<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" color:#ffffff;\">An interface created using Python and PySide (support for PyQt), and with colors based on the Dracula theme created by Zeno Rocha.</span></p>\n"
+"<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><"
+                        "span style=\" color:#ffffff;\">MIT License</span></p>\n"
 "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" color:#bd93f9;\">Created by: Wanderson M. Pimenta</span></p>\n"
 "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600; color:#ff79c6;\">Convert UI</span></p>\n"
 "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:9pt; color:#ffffff;\">pyside6-uic main.ui &gt; ui_main.py</span></p>\n"
-"<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-in"
-                        "dent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600; color:#ff79c6;\">Convert QRC</span></p>\n"
-"<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:9pt; color:#ffffff;\">pyside6-rcc resources.qrc -o resources_rc.py</span></p></body></html>", None))
+"<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600; color:#ff79c6;\">Convert QRC</span></p>\n"
+"<p align=\"center\" style=\" margin-top:12px; "
+                        "margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:9pt; color:#ffffff;\">pyside6-rcc resources.qrc -o resources_rc.py</span></p></body></html>", None))
         self.extraLabel_3.setText(QCoreApplication.translate("MainWindow", u"Images", None))
 #if QT_CONFIG(tooltip)
         self.closeImageButton.setToolTip(QCoreApplication.translate("MainWindow", u"Close left box", None))
@@ -2263,7 +2232,7 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.extraCloseColumnBtn_5.setText("")
         self.brushButton.setText("")
-        self.grabCutButton.setText("")
+        self.eraseButton.setText("")
         self.autoLabelButton.setText("")
         self.enhancementButton.setText("")
         self.btn_message.setText(QCoreApplication.translate("MainWindow", u"Message", None))

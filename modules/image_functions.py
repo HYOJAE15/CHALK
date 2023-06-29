@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 from .ui_main import Ui_MainWindow
 from .ui_functions import UIFunctions
 from .ui_brush_menu import Ui_BrushMenu
+from .ui_erase_menu import Ui_EraseMenu
 from .app_settings import Settings
 from .dnn_functions import DNNFunctions
 
@@ -45,6 +46,25 @@ class BrushMenuWindow(QMainWindow, UIFunctions):
 
     def mousePressEvent(self, event):
         self.dragPos = event.globalPos()
+
+class EraseMenuWindow(QMainWindow, UIFunctions):
+    def __init__(self):
+        QMainWindow.__init__(self)
+
+        self.ui = Ui_EraseMenu()
+        self.ui.setupUi(self)
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
+
+        self.settings = Settings()
+
+        self.uiDefinitions()
+
+    def resizeEvent(self, event):
+        self.resize_grips()
+
+    def mousePressEvent(self, event):
+        self.dragPos = event.globalPos()
+
 
 class ImageFunctions(DNNFunctions):
     def __init__(self):
@@ -88,8 +108,16 @@ class ImageFunctions(DNNFunctions):
 
         self.use_brush = False
         
+        """
+        Erase Tool
+        """
+        mainWidgets.eraseButton.clicked.connect(self.openEraseMenu)
+
+        self.EraseMenu = EraseMenuWindow()
+        self.EraseMenu.ui.eraseSizeSlider.valueChanged.connect(self.changeEraseSize)
         
-        
+        self.use_erase = False
+
         """
         Autolabel Tool
         """
@@ -97,23 +125,24 @@ class ImageFunctions(DNNFunctions):
         self.use_autolabel = False
 
         """
-        Label Enhancement Tool
+        Enhancement Tool
         """
-        mainWidgets.enhancementButton.clicked.connect(self.checkEnhancementButton)
+        
         self.use_refinement = False
 
         """
         Label GrapCut Tool
         """
 
-        mainWidgets.grabCutButton.clicked.connect(self.checkGrabCutButton)
-        self.use_grabcut = False
+        # mainWidgets.grabCutButton.clicked.connect(self.checkGrabCutButton)
+        # self.use_grabcut = False
 
         """
         Variables
         """
         self.ControlKey = False
         self.brushSize = 10
+        self.EraseSize = 10
 
         self.input_point_list = []
         self.input_label_list = []
@@ -201,19 +230,20 @@ class ImageFunctions(DNNFunctions):
         # update colormap
         self.updateColorMap()
 
-    def set_button_state(self, use_autolabel=False, use_refinement=False, use_brush=False, use_grabcut=False):
+    def set_button_state(self, use_autolabel=False, use_refinement=False, use_brush=False, use_erase=False):
         """
         Set the state of the buttons
         """
         self.use_autolabel = use_autolabel
         self.use_refinement = use_refinement
         self.use_brush = use_brush
-        self.use_grabcut = use_grabcut
+        self.use_erase = use_erase
 
         mainWidgets.brushButton.setChecked(use_brush)
+        mainWidgets.eraseButton.setChecked(use_erase)
         mainWidgets.autoLabelButton.setChecked(use_autolabel)
         mainWidgets.enhancementButton.setChecked(use_refinement)
-        mainWidgets.grabCutButton.setChecked(use_grabcut)
+        
 
 
     def checkAutoLabelButton(self):
@@ -229,6 +259,14 @@ class ImageFunctions(DNNFunctions):
             self.load_sam(self.sam_checkpoint)
             print(f"SAM: {self.brush_class}")
 
+    def checkEraseButton(self):
+        """
+        Enable or disable erase button
+        """
+        print(f"Erase!!")
+
+
+    
     def checkEnhancementButton(self):
         """
         Enable or disable enhancement button
@@ -261,20 +299,28 @@ class ImageFunctions(DNNFunctions):
         elif self.use_brush == True:
             self.BrushMenu.close()
             self.set_button_state()
-            
-        
-    def closeBrushMenu (self):
+
+    def openEraseMenu(self):
         """
-        close brush menu
+        Open or Close Erase menu
         """
-        self.BrushMenu.close()
-        self.set_button_state(use_brush=False)
-        
+        if self.use_erase == False:
+            self.EraseMenu.show()
+            self.set_button_state(use_erase=True)
+
+        elif self.use_erase == True:
+            self.EraseMenu.close()
+            self.set_button_state()
+                
         
 
     def changeBrushSize(self, value):
         self.brushSize = value
         self.BrushMenu.ui.brushSizeText.setText(str(value))
+
+    def changeEraseSize(self, value):
+        self.EraseSize = value
+        self.EraseMenu.ui.eraseSizeText.setText(str(value))
 
 
     def deleteImage(self, event):
@@ -365,46 +411,38 @@ class ImageFunctions(DNNFunctions):
 
     
     def openImage(self, index):
-        
         self.imgPath = self.fileModel.filePath(index)
 
-        self.labelPath = self.imgPath.replace('/leftImg8bit/', '/gtFine/')
-        self.labelPath = self.labelPath.replace( '_leftImg8bit.png', '_gtFine_labelIds.png')
-
-        self.pixmap = readImageToPixmap(self.imgPath)        
+        if os.path.isdir(self.imgPath):
+            print(f"folder")
         
-        self.label = imread(self.labelPath)
-        print(type(self.label))
-        print(f"label member: {np.unique(self.label)}")
-        
+        elif os.path.isfile(self.imgPath):
+            
+            self.labelPath = self.imgPath.replace('/leftImg8bit/', '/gtFine/')
+            self.labelPath = self.labelPath.replace( '_leftImg8bit.png', '_gtFine_labelIds.png')
+            self.pixmap = readImageToPixmap(self.imgPath)        
+            
+            self.label = imread(self.labelPath)
+            
+            print(self.label.shape)
+            self.colormap = convertLabelToColorMap(self.label, self.label_palette, self.alpha)
+            self.color_pixmap = QPixmap(cvtArrayToQImage(self.colormap))
+            
+            self.scene = QGraphicsScene()
+            self.pixmap_item = self.scene.addPixmap(self.pixmap)
 
-        # cv2.imshow("label", self.label)
-        # print(self.labelPath)
-        # test=cv2.imread(self.labelPath)
-        # print(type(test))
-        # plt.imshow(test)
-        # plt.show()
+            self.color_pixmap_item = self.scene.addPixmap(self.color_pixmap)
 
-        
+            mainWidgets.mainImageViewer.setScene(self.scene)
 
-        self.colormap = convertLabelToColorMap(self.label, self.label_palette, self.alpha)
-        self.color_pixmap = QPixmap(cvtArrayToQImage(self.colormap))
-        
-        self.scene = QGraphicsScene()
-        self.pixmap_item = self.scene.addPixmap(self.pixmap)
+            self.scale = mainWidgets.scrollAreaImage.height() / self.label.shape[0]
+            mainWidgets.mainImageViewer.setFixedSize(self.scale * self.color_pixmap.size())
+            mainWidgets.mainImageViewer.fitInView(self.pixmap_item)
 
-        self.color_pixmap_item = self.scene.addPixmap(self.color_pixmap)
-
-        mainWidgets.mainImageViewer.setScene(self.scene)
-
-        self.scale = mainWidgets.scrollAreaImage.height() / self.label.shape[0]
-        mainWidgets.mainImageViewer.setFixedSize(self.scale * self.color_pixmap.size())
-        mainWidgets.mainImageViewer.fitInView(self.pixmap_item)
-
-        if hasattr(self, 'sam_predictor'):
-            self.set_sam_image()
-            self.sam_x_idx = [] 
-            self.sam_y_idx = []
+            if hasattr(self, 'sam_predictor'):
+                self.set_sam_image()
+                self.sam_x_idx = [] 
+                self.sam_y_idx = []
 
         
     def useGrabCut(self, event):
@@ -587,8 +625,8 @@ class ImageFunctions(DNNFunctions):
         if self.use_refinement :
             self.useEnhancement(event)
 
-        if self.use_grabcut : 
-            self.useGrabCut(event)
+        # if self.use_grabcut : 
+        #     self.useGrabCut(event)
 
         if self.use_autolabel:
             # if mouse is not moved 
@@ -615,6 +653,10 @@ class ImageFunctions(DNNFunctions):
             else:
                 self.useBrushV1(event)
 
+        elif self.use_erase:
+            self.useErase(event)
+
+        
         elif self.use_autolabel:
             self.drawRectangle(event)
 
@@ -820,6 +862,34 @@ class ImageFunctions(DNNFunctions):
             cv2.line(label_rgb, (self.x, self.y), (x, y), (self.brush_class, self.brush_class, self.brush_class), self.brushSize)
             self.label = label_rgb[:, :, 0]
 
+            self.colormap = convertLabelToColorMap(self.label, self.label_palette, self.alpha)
+            self.color_pixmap = QPixmap(cvtArrayToQImage(self.colormap))
+
+            self.color_pixmap_item.setPixmap(QPixmap())
+            self.color_pixmap_item.setPixmap(self.color_pixmap)
+
+        self.x = x
+        self.y = y
+
+    def useErase(self, event):
+
+        event_global = mainWidgets.mainImageViewer.mapFromGlobal(event.globalPos())
+
+        x, y = getScaledPoint(event_global, self.scale)
+        
+        if (self.x != x) or (self.y != y) : 
+
+            # find max and min x and y
+            label_rgb = cv2.cvtColor(self.label, cv2.COLOR_GRAY2RGB)
+            cv2.line(label_rgb, (self.x, self.y), (x, y), (0, 0, 0), self.EraseSize)
+            label_erase = label_rgb[:, :, 0]
+            
+            if self.brush_class != 0 :
+                label_erase_erase = label_erase == self.brush_class
+                label_erase_label = self.label == self.brush_class
+                self.label[label_erase_erase != label_erase_label] = 0
+
+            
             self.colormap = convertLabelToColorMap(self.label, self.label_palette, self.alpha)
             self.color_pixmap = QPixmap(cvtArrayToQImage(self.colormap))
 

@@ -4136,7 +4136,7 @@ background-repeat: no-repeat;</string>
                      </widget>
                     </item>
                     <item row="0" column="1">
-                     <widget class="QPushButton" name="grabCutButton">
+                     <widget class="QPushButton" name="eraseButton">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
                         <horstretch>0</horstretch>
