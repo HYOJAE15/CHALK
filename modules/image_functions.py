@@ -294,7 +294,10 @@ class ImageFunctions(DNNFunctions):
         """
         if self.use_brush == False:
             self.BrushMenu.show()
-            self.set_button_state(use_brush=True)
+            if hasattr(self, 'EraseMenu'):
+                self.EraseMenu.close()  
+
+            self.set_button_state(use_brush=True, use_erase=False)
 
         elif self.use_brush == True:
             self.BrushMenu.close()
@@ -306,7 +309,10 @@ class ImageFunctions(DNNFunctions):
         """
         if self.use_erase == False:
             self.EraseMenu.show()
-            self.set_button_state(use_erase=True)
+            if hasattr(self, 'BrushMenu'):
+                self.BrushMenu.close()
+
+            self.set_button_state(use_erase=True, use_brush=False)
 
         elif self.use_erase == True:
             self.EraseMenu.close()
