@@ -99,6 +99,7 @@ class ProjectFunctions(object):
 
         # Class List 
         mainWidgets.classList.itemClicked.connect(self.getListWidgetIndex)
+        # mainWidgets.classList.itemSelectionChanged.connect(self.getListWidgetIndex_autolabel)
         
     def selectProjectFolder(self):
         self.project_folder = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
@@ -215,8 +216,8 @@ class ProjectFunctions(object):
         self.openImageMenu()
 
         mainWidgets.classList.setCurrentRow(0)
-        print(f"currentRow: {mainWidgets.classList.currentRow()}")
-
+        
     def getListWidgetIndex (self):
         self.brush_class = mainWidgets.classList.currentRow()
-        print(f"brush_class(list widget): {self.brush_class}")
+        
+    

@@ -88,7 +88,7 @@ class ImageFunctions(DNNFunctions):
         mainWidgets.mainImageViewer.mouseMoveEvent = self._mouseMoveEvent
         mainWidgets.mainImageViewer.mousePressEvent = self._mousePressPoint
         mainWidgets.mainImageViewer.mouseReleaseEvent = self._mouseReleasePoint
-        mainWidgets.mainImageViewer.mouseDoubleClickEvent = self._mouseDoubleClick
+        # mainWidgets.mainImageViewer.mouseDoubleClickEvent = self._mouseDoubleClick
 
         
         mainWidgets.addImageButton.clicked.connect(self.addNewImage)
@@ -123,6 +123,10 @@ class ImageFunctions(DNNFunctions):
         """
         mainWidgets.autoLabelButton.clicked.connect(self.checkAutoLabelButton)
         self.use_autolabel = False
+
+        mainWidgets.classList.itemSelectionChanged.connect(self.convertDNN)
+        self.mmseg_status = False
+        self.sam_status = False
 
         """
         Enhancement Tool
@@ -250,44 +254,42 @@ class ImageFunctions(DNNFunctions):
         """
         Enable or disable auto label button
         """
-        self.set_button_state(use_autolabel=True)
-        print("self.brush_class", self.brush_class)
+        if self.use_autolabel == False:
 
-        if self.brush_class == 1:
-            self.load_mmseg(self.mmseg_config, self.mmseg_checkpoint)
-        else:
-            self.load_sam(self.sam_checkpoint)
-            print(f"SAM: {self.brush_class}")
-
-    def checkEraseButton(self):
-        """
-        Enable or disable erase button
-        """
-        print(f"Erase!!")
+            self.set_button_state(use_autolabel=True, use_brush=False, use_erase=False)
+            
+            if hasattr(self, 'EraseMenu'):
+                self.EraseMenu.close()  
+            if hasattr(self, 'BrushMenu'):
+                self.BrushMenu.close()  
 
 
-    
-    def checkEnhancementButton(self):
-        """
-        Enable or disable enhancement button
-        """
-        self.set_button_state(use_refinement=True)
-
-
-    def checkBrushButton(self):
-        """
-        Enabale or disable brush
-        """
-        self.set_button_state(use_brush=True)
-
-
-    def checkGrabCutButton(self):
-        """
-        Enable or disable grabcut button
-        """
-        self.set_button_state(use_grabcut=True)
-
+            if self.brush_class == 1:
+                if hasattr(self, 'mmseg_model') == False :
+                    self.load_mmseg(self.mmseg_config, self.mmseg_checkpoint)
+            else:
+                if hasattr(self, 'sam_model') == False :
+                    self.load_sam(self.sam_checkpoint) 
         
+        elif self.use_autolabel == True:
+            self.set_button_state()
+
+    def convertDNN (self):
+        """
+        convert deep learning model among mmseg & sam
+        current brush class is the class before the change
+        """
+        if self.use_autolabel :
+            
+            if self.brush_class == 1 :
+                if hasattr(self, 'sam_model') == False :
+                    self.load_sam(self.sam_checkpoint)
+    
+            else :
+                if hasattr(self, 'mmseg_model') == False :
+                    self.load_mmseg(self.mmseg_config, self.mmseg_checkpoint)
+
+                
     def openBrushMenu(self):
         """
         Open or Close brush menu
@@ -297,7 +299,7 @@ class ImageFunctions(DNNFunctions):
             if hasattr(self, 'EraseMenu'):
                 self.EraseMenu.close()  
 
-            self.set_button_state(use_brush=True, use_erase=False)
+            self.set_button_state(use_brush=True, use_erase=False, use_autolabel=False)
 
         elif self.use_brush == True:
             self.BrushMenu.close()
@@ -312,7 +314,7 @@ class ImageFunctions(DNNFunctions):
             if hasattr(self, 'BrushMenu'):
                 self.BrushMenu.close()
 
-            self.set_button_state(use_erase=True, use_brush=False)
+            self.set_button_state(use_erase=True, use_brush=False, use_autolabel=False)
 
         elif self.use_erase == True:
             self.EraseMenu.close()
@@ -425,10 +427,8 @@ class ImageFunctions(DNNFunctions):
             
             self.label = imread(self.labelPath)
             
-            print(self.label.shape)
             self.colormap = convertLabelToColorMap(self.label, self.label_palette, self.alpha)
             self.color_pixmap = QPixmap(cvtArrayToQImage(self.colormap))
-            
             self.scene = QGraphicsScene()
             self.pixmap_item = self.scene.addPixmap(self.pixmap)
 
@@ -549,13 +549,21 @@ class ImageFunctions(DNNFunctions):
 
         if (self.fixed_x != x) or (self.fixed_y != y) :
 
-            # check if the point is in the image
-            if (x < 0) or (x > self.label.shape[1]) or (y < 0) or (y > self.label.shape[0]):
-                return None 
+                
+            if x < 0:
+                x = 0
+            elif x > self.label.shape[1]:
+                x = self.label.shape[1]
+            
+            if y < 0:
+                y = 0
+            elif y > self.label.shape[0]:
+                y = self.label.shape[0]
+            
             
             # get the region of interest
             img = cvtPixmapToArray(self.pixmap)
-            cv2.imshow("check_img", img)
+            # cv2.imshow("check_img", img)
 
             if self.fixed_x > x :
                 min_x = x
@@ -571,13 +579,18 @@ class ImageFunctions(DNNFunctions):
                 min_y = self.fixed_y
                 max_y = y
 
+            self.sam_rec_min_x = min_x
+            self.sam_rec_max_x = max_x
+            self.sam_rec_min_y = min_y
+            self.sam_rec_max_y = max_y
+
             img_roi = img[min_y:max_y, min_x:max_x, :3]
-            # cv2.imshow("cropImage", img_roi)
             
             if self.brush_class == 0:
                 pass 
 
             elif self.brush_class == 1:
+                
                 mask = self.inference_mmseg(img_roi)
 
                 idx = np.argwhere(mask == 1)
@@ -588,9 +601,13 @@ class ImageFunctions(DNNFunctions):
                 self.label[y_idx, x_idx] = self.brush_class
                 self.colormap[y_idx, x_idx, :3] = self.label_palette[self.brush_class]
 
-                self.color_pixmap = QPixmap(cvtArrayToQImage(self.colormap))
+                _colormap = copy.deepcopy(self.colormap)
+                cv2.rectangle(_colormap, (min_x, min_y), (max_x, max_y), (255, 255, 255, 255), 3)
+
+                self.color_pixmap = QPixmap(cvtArrayToQImage(_colormap))
                 self.color_pixmap_item.setPixmap(QPixmap())
                 self.color_pixmap_item.setPixmap(self.color_pixmap)
+                
 
             else :
                 self.input_label_list = []
@@ -603,8 +620,8 @@ class ImageFunctions(DNNFunctions):
                     self.sam_y_idx = []
                     self.sam_x_idx = []
                 
-                dst_bgr = histEqualization_hsv(img_roi)
-                self.sam_predictor.set_image(dst_bgr)
+                # dst_bgr = histEqualization_hsv(img_roi)
+                self.sam_predictor.set_image(img_roi)
                 
 
                 # save min_x, min_y, max_x, max_y for SAM
@@ -615,8 +632,8 @@ class ImageFunctions(DNNFunctions):
 
 
                 
-    def _mouseDoubleClick(self, event):
-        self.startOrEndSAM()
+    # def _mouseDoubleClick(self, event):
+    #     self.startOrEndSAM()
     
     def _mouseReleasePoint(self, event):
 
@@ -637,6 +654,7 @@ class ImageFunctions(DNNFunctions):
             else: 
                 print("run rectangle inference")
                 if (self.rect_max_x - self.rect_min_x) < 100 or (self.rect_max_y - self.rect_min_y) < 100:
+                    print("Not Enough")
                     return None
                 else:
                     self.inferenceRectangle(event)
@@ -669,13 +687,11 @@ class ImageFunctions(DNNFunctions):
 
         # Get the brush class
         self.brush_class = mainWidgets.classList.currentRow()
-        print(f"brush_class(mainimageViewer): {self.brush_class}")
-
+        
         event_global = mainWidgets.mainImageViewer.mapFromGlobal(event.globalPos())
-        print(f"event_global: {event_global}")
+        
         x, y = getScaledPoint(event_global, self.scale)
-        print(f"x, y: {(x, y)}")
-
+        
         self.x = x
         self.y = y
 
@@ -718,12 +734,18 @@ class ImageFunctions(DNNFunctions):
             self.label[y_idx, x_idx] = self.brush_class
             self.colormap[y_idx, x_idx, :3] = self.label_palette[self.brush_class]
 
-            self.color_pixmap = QPixmap(cvtArrayToQImage(self.colormap))
+            _colormap = copy.deepcopy(self.colormap)
+            cv2.rectangle(_colormap, (min_x, min_y), (max_x, max_y), (255, 255, 255, 255), 3)
+
+            self.color_pixmap = QPixmap(cvtArrayToQImage(_colormap))
             self.color_pixmap_item.setPixmap(QPixmap())
             self.color_pixmap_item.setPixmap(self.color_pixmap)
         
         else :
-            self.inference_sam(event)
+            if self.brush_class != 0:
+                self.inference_sam(event)
+            elif self.brush_class == 0:
+                print(f"current brush class is background")
 
     def inference_sam(self, event):
         """
@@ -764,7 +786,7 @@ class ImageFunctions(DNNFunctions):
             y_idx, x_idx = idx[:, 0], idx[:, 1]
 
         else : 
-            print(self.sam_mask_input.shape)
+            print(f"sam_mask_input.shape: {self.sam_mask_input.shape}")
             masks, _, _ = self.sam_predictor.predict(
                 point_coords=input_point,
                 point_labels=input_label,
@@ -773,8 +795,8 @@ class ImageFunctions(DNNFunctions):
             )
 
             mask = masks[0, :, :]
-            print(masks)
-            print(masks.shape)
+            print(f"masks: {masks}")
+            print(f"masks.shape: {masks.shape}")
             # self.sam_mask_input = logits
 
             # update label with result
@@ -788,16 +810,16 @@ class ImageFunctions(DNNFunctions):
         self.sam_y_idx = y_idx
         self.sam_x_idx = x_idx
         
-        # self.label[y_idx, x_idx] = self.brush_class
         self.updateColorMap()
 
         # cv2 add circles to self.colormap
         # self.colormap[y_idx, x_idx, :3] = self.label_palette[self.brush_class]
-
+        
+        # self.label[y_idx, x_idx] = self.brush_class
         self.colormap[y_idx, x_idx, :3] = self.label_palette[self.brush_class]
 
         _colormap = copy.deepcopy(self.colormap)
-        cv2.rectangle(_colormap, (self.rect_min_x, self.rect_min_y), (self.rect_max_x, self.rect_max_y), (255, 255, 255, 255), 3)
+        cv2.rectangle(_colormap, (self.sam_rec_min_x, self.sam_rec_min_y), (self.sam_rec_max_x, self.sam_rec_max_y), (255, 255, 255, 255), 3)
 
         
         self.color_pixmap = QPixmap(cvtArrayToQImage(_colormap))

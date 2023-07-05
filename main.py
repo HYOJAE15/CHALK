@@ -194,21 +194,23 @@ class MainWindow(
         elif event.key() == 66 : # B key
             self.openBrushMenu()
         
-        elif event.key() == 71 : # G key
-            self.checkGrabCutButton()
+        # elif event.key() == 71 : # G key
+        #     self.checkGrabCutButton()
         
         elif event.key() == 16777249: # Ctrl key
             self.ControlKey = True
 
         elif event.key() == 83: # S key 
             if self.ControlKey:
+                if self.use_autolabel == True and self.brush_class != 1 and self.brush_class != 0:
+                    print("END_SAM")
+                    self.startOrEndSAM()
                 imwrite(self.labelPath, self.label) 
 
         elif event.key() == 72: # H key
             # activate scroll move mode 
             self.scrollMove = True
-            print(f"activate H")
-
+            
         else :
             print(event.key())
             
@@ -220,12 +222,11 @@ class MainWindow(
         elif event.key() == 72: # H key
             # deactivate scroll move mode 
             self.scrollMove = False
-            print(f"deactivate H")
-     
-        elif event.key() == 77:
+            
+        elif event.key() == 77: # M key
             self.sam_mode = False
             print(self.sam_mode)
-            self.startOrEndSAM()
+            # self.startOrEndSAM()
 
     def mousePressEvent(self, event):
         self.dragPos = event.globalPos()

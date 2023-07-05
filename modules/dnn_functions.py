@@ -91,6 +91,8 @@ class DNNFunctions(object):
         self.sam_model.to(device='cuda:0')
         self.sam_predictor = SamPredictor(self.sam_model)
         self.set_sam_image()
+        self.sam_status = True
+        self.mmseg_status = False
 
         
     def set_sam_image(self):
@@ -108,6 +110,8 @@ class DNNFunctions(object):
             checkpoint_file (str): The path to the checkpoint file.
         """
         self.mmseg_model = init_model(config_file, checkpoint_file, device='cuda:0')
+        self.mmseg_status = True
+        self.sam_status = False
 
     def inference_mmseg(self, img, do_crf=True):
         """
@@ -122,7 +126,11 @@ class DNNFunctions(object):
 
         """
         # filter image size too small or too large
-        if img.shape[0] < 50 or img.shape[1] < 50 or img.shape[0] > 1000 or img.shape[1] > 1000:
+        if img.shape[0] < 50 or img.shape[1] < 50 :
+            print(f"too small")
+            return np.zeros((img.shape[0], img.shape[1]), dtype=np.uint8)
+        elif img.shape[0] > 1000 or img.shape[1] > 1000 :
+            print(f"too large")
             return np.zeros((img.shape[0], img.shape[1]), dtype=np.uint8)
 
         img = self.cvtRGBATORGB(img)
