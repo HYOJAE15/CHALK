@@ -188,55 +188,29 @@ def readImageToPixmap(path):
         return QPixmap(cvtArrayToQImage(img))
 
 def histEqualization_gr (img):
-    print(f"histeq_gr")
-    ## [Convert to grayscale(binary)]
+    
     src_gr = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    ## [Convert to grayscale(binary)]
-
-    ## [Apply Histogram Equalization]
     dst_gr = cv2.equalizeHist(src_gr)
-    ## [Apply Histogram Equalization]
-
-    ## [Convert to bgrimage]
     dst_gr_bgr = cv2.cvtColor(dst_gr, cv2.COLOR_GRAY2BGR)
-    ## [Convert to bgrimage]
-
-    cv2.imshow("dst_gr_bgr", dst_gr_bgr)
-
+    
     return dst_gr_bgr
 
 def histEqualization_hsv (img):
-    print(f"histeq_hsv")
-
-    # hsv 컬러 형태로 변형합니다.
+    
     src_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    # h(hue: 색상), s(saturation: 채도), v(value: 명도(색의 밝기))로 컬러 영상을 분리 합니다. 
     h, s, v = cv2.split(src_hsv)
-    # v(value: 명도)값을 히스토그램 평활화를 합니다.
     dst_hsv_v = cv2.equalizeHist(v)
-    # h,s,equalizedV를 합쳐서 새로운 hsv 이미지를 만듭니다.
     dst_hsv_merged = cv2.merge([h,s,dst_hsv_v])
-    # 마지막으로 hsv2를 다시 BGR 형태로 변경합니다.
     dst_hsv_merged_bgr = cv2.cvtColor(dst_hsv_merged, cv2.COLOR_HSV2BGR)
-
-    cv2.imshow("dst_hsv_merged_bgr", dst_hsv_merged_bgr)
 
     return dst_hsv_merged_bgr
 
 def histEqualization_ycc (img):
-    print(f"histeq_ycc")
-
-    # YCrCb 컬러 형태로 변환합니다.
+    
     src_ycc = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
-    # y(휘도(색의 밝기)), Cr(색차 성분), Cb(색차 성분)로 컬러 영상을 분리 합니다.
     y, Cr, Cb = cv2.split(src_ycc)
-    # y값을 히스토그램 평활화를 합니다.
     dst_ycc_y = cv2.equalizeHist(y)
-    # equalizedY, Cr, Cb를 합쳐서 새로운 yCrCb 이미지를 만듭니다.
     dst_ycc_merged = cv2.merge([dst_ycc_y, Cr, Cb])
-    # 마지막으로 yCrCb2를 다시 BGR 형태로 변경합니다.
     dst_ycc_merged_bgr = cv2.cvtColor(dst_ycc_merged, cv2.COLOR_YCrCb2BGR)
-
-    cv2.imshow("dst_ycc_merged_bgr", dst_ycc_merged_bgr)
 
     return dst_ycc_merged_bgr
