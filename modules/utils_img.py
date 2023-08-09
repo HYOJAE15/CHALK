@@ -143,7 +143,22 @@ def getScaledPoint(event, scale):
 
     x, y = round(event.x() / scale), round(event.y() / scale)
 
-    return x, y 
+    return x, y
+
+def getScaledPoint_mmdet(point, scale):
+    """
+    get mmdet point 
+    Args:
+        point: mmdet bbox
+        scale: float
+
+    Returns:
+        tuple(int): x, y
+    """
+
+    min_x, min_y, max_x, max_y = round(float(point[0]) / scale), round(float(point[1]) / scale), round(float(point[2]) / scale), round(float(point[3]) / scale)
+
+    return min_x, min_y, max_x, max_y
 
 def getCoordBTWTwoPoints(x1, y1, x2, y2):
     """

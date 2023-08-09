@@ -206,6 +206,12 @@ class MainWindow(
                     print("END_SAM")
                     self.startOrEndSAM()
                 imwrite(self.labelPath, self.label) 
+        
+        elif event.key() == 70: # F key
+            if self.ControlKey:
+                self.inferenceFullyAutomaticLabeling()
+            
+            # Filling Hole 
 
         elif event.key() == 72: # H key
             # activate scroll move mode 

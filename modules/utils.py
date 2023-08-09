@@ -32,6 +32,12 @@ def imwrite(path:str,
     _, label_to_file = cv2.imencode(ext, img)
     label_to_file.tofile(path)
 
+def imwrite_colormap(path, img): 
+    _, ext = os.path.splitext(path)
+    _, label_to_file = cv2.imencode(ext, img)
+    label_to_file.tofile(path)
+
+
 def createLayersFromLabel(label: np.array, 
                           num_class: int
                           ) -> list([np.array]):
@@ -138,3 +144,26 @@ def generateForNumberOfWindows(data, dimOrder, windowCount, overlapPercent, tran
 		overrideWidth = windowSizeX,
 		overrideHeight = windowSizeY
 	)
+
+def blendImageWithColorMap(image, label, palette, alpha):
+    """ blend image with color map 
+    Args: 
+        image (3d np.array): RGB image
+        label (2d np.array): 1 channel gray-scale image
+        pallete (2d np.array) 
+        alpha (float)
+
+    Returns: 
+        color_map (3d np.array): RGB image
+    """
+
+    color_map = np.zeros_like(image)
+        
+    for idx, color in enumerate(palette) : 
+        
+        if idx == 0 :
+            color_map[label == idx, :] = image[label == idx, :] * 1
+        else :
+            color_map[label == idx, :] = image[label == idx, :] * alpha + color * (1-alpha)
+
+    return color_map
