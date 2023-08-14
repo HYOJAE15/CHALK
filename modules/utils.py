@@ -13,6 +13,8 @@ from PySide6.QtGui import QImage
 import slidingwindow as sw 
 import math 
 
+import csv
+
 
 def imread(path: str) -> np.array:
     img = cv2.imdecode(np.fromfile(path, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
@@ -167,3 +169,58 @@ def blendImageWithColorMap(image, label, palette, alpha):
             color_map[label == idx, :] = image[label == idx, :] * alpha + color * (1-alpha)
 
     return color_map
+
+def getPrompt(ROI, point, label, path, OR_Rect):
+    """
+    실험 결과 분석을 위하여 세부내용(Prompt)을 csv 파일로 저장한다. 
+    """
+    fields = ["File", "min X", "min Y", "max X", "max Y", "Overlap Rate", "Prompt(point)", "Prompt(label)"]
+    csv_name = os.path.basename(path)
+    
+    if os.path.isfile(path) == False:
+        samData_list = [csv_name, ROI[0], ROI[1], ROI[2], ROI[3], 0, point, label]
+    
+
+        with open(path, "x", encoding="cp949", newline="") as f:
+            write = csv.writer(f)
+            write.writerow(fields)
+
+            write.writerow(samData_list)
+            
+    elif os.path.isfile(path) : 
+        latestData_list = []
+        
+        with open(path, "r", encoding="cp949", newline="") as f:
+            rows = csv.reader(f)
+            for row in rows:
+                latestData_list.append(row)
+        
+        for idx in latestData_list[1:] :
+            print(f"latestData_list: {idx}")
+            start=[int(idx[1]), int(idx[2])]
+            end = [int(idx[3]), int(idx[4])]
+            OR_Rect = cv2.rectangle(OR_Rect, start, end, (1, 1, 1), -1)
+
+        roi_last = np.zeros(OR_Rect.shape)
+        roi_last_start = [ROI[0], ROI[1]]
+        roi_last_end = [ROI[2], ROI[3]]
+        roi_last = cv2.rectangle(roi_last, roi_last_start, roi_last_end, (1, 1, 1), -1)
+
+        union = np.count_nonzero(OR_Rect)
+        last_roi = cv2.countNonZero(roi_last)
+
+        if union > 0 : 
+            intersection = cv2.bitwise_and(roi_last, OR_Rect)
+            intersection_roi = cv2.countNonZero(intersection)
+            overlap_rate = intersection_roi/last_roi
+            
+        elif union == 0 :
+            overlap_rate = 0
+            
+        
+        samData_list = [csv_name, ROI[0], ROI[1], ROI[2], ROI[3], overlap_rate, point, label]
+    
+
+        with open(path, "a", encoding="cp949", newline="") as f:
+            write = csv.writer(f)
+            write.writerow(samData_list)

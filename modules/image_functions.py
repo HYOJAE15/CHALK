@@ -19,7 +19,7 @@ from .ui_erase_menu import Ui_EraseMenu
 from .app_settings import Settings
 from .dnn_functions import DNNFunctions
 
-from .utils import imread, cvtArrayToQImage, cvtPixmapToArray, convertLabelToColorMap, blendImageWithColorMap
+from .utils import imread, cvtArrayToQImage, cvtPixmapToArray, convertLabelToColorMap, blendImageWithColorMap, getPrompt
 from .utils_img import (
     getScaledPoint, getScaledPoint_mmdet, getCoordBTWTwoPoints, applyBrushSize, readImageToPixmap, histEqualization_gr, histEqualization_hsv, histEqualization_ycc
 )
@@ -788,7 +788,6 @@ class ImageFunctions(DNNFunctions):
             y_idx, x_idx = idx[:, 0], idx[:, 1]
 
         else : 
-            print(f"sam_mask_input.shape: {self.sam_mask_input.shape}")
             masks, _, _ = self.sam_predictor.predict(
                 point_coords=input_point,
                 point_labels=input_label,
@@ -797,8 +796,6 @@ class ImageFunctions(DNNFunctions):
             )
 
             mask = masks[0, :, :]
-            print(f"masks: {masks}")
-            print(f"masks.shape: {masks.shape}")
             # self.sam_mask_input = logits
 
             # update label with result
@@ -827,6 +824,29 @@ class ImageFunctions(DNNFunctions):
         self.color_pixmap = QPixmap(cvtArrayToQImage(_colormap))
         self.color_pixmap_item.setPixmap(QPixmap())
         self.color_pixmap_item.setPixmap(self.color_pixmap)
+
+
+        # Save the prompt for comparative experiment
+        sam_ROI = [self.sam_rec_min_x, self.sam_rec_min_y, self.sam_rec_max_x, self.sam_rec_max_y]
+        
+        latest_point = self.input_point_list[-1]
+        latest_label = self.input_label_list[-1]
+
+        csv_dirname = os.path.dirname(self.labelPath)
+        csv_dirname = os.path.dirname(csv_dirname)
+        csv_dirname = os.path.dirname(csv_dirname)
+        csv_dirname = os.path.join(csv_dirname, "Coordinate_SAM")
+        os.makedirs(csv_dirname, exist_ok=True)
+
+        csv_filename = os.path.basename(self.labelPath)
+        csv_filename = csv_filename.replace("_gtFine_labelIds.png", ".csv")
+
+        csv_path = os.path.join(csv_dirname, csv_filename)
+
+        print(f"label shape: {self.label.shape}")
+        OR_rect = np.zeros(self.label.shape)
+
+        getPrompt(sam_ROI, latest_point, latest_label, csv_path, OR_rect)
 
     def inferenceFullyAutomaticLabeling (self):
         """
