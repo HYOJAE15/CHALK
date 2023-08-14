@@ -196,7 +196,6 @@ def getPrompt(ROI, point, label, path, OR_Rect):
                 latestData_list.append(row)
         
         for idx in latestData_list[1:] :
-            print(f"latestData_list: {idx}")
             start=[int(idx[1]), int(idx[2])]
             end = [int(idx[3]), int(idx[4])]
             OR_Rect = cv2.rectangle(OR_Rect, start, end, (1, 1, 1), -1)
@@ -208,11 +207,15 @@ def getPrompt(ROI, point, label, path, OR_Rect):
 
         union = np.count_nonzero(OR_Rect)
         last_roi = cv2.countNonZero(roi_last)
+        
 
         if union > 0 : 
             intersection = cv2.bitwise_and(roi_last, OR_Rect)
             intersection_roi = cv2.countNonZero(intersection)
+            print(f"intersection_roi: {intersection_roi}")
+            print(f"last_roi: {last_roi}")
             overlap_rate = intersection_roi/last_roi
+            print(f"overlap rate: {overlap_rate}")
             
         elif union == 0 :
             overlap_rate = 0

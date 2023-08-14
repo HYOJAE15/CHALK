@@ -769,9 +769,7 @@ class ImageFunctions(DNNFunctions):
 
         input_point = np.array(self.input_point_list)
         input_label = np.array(self.input_label_list)
-        print("input_point: ", input_point)
-        print("input_label: ", input_label)
-
+        
         if len(self.input_label_list) < 2:
 
             masks, scores, logits = self.sam_predictor.predict(
@@ -843,7 +841,6 @@ class ImageFunctions(DNNFunctions):
 
         csv_path = os.path.join(csv_dirname, csv_filename)
 
-        print(f"label shape: {self.label.shape}")
         OR_rect = np.zeros(self.label.shape)
 
         getPrompt(sam_ROI, latest_point, latest_label, csv_path, OR_rect)
