@@ -76,14 +76,37 @@ class DNNFunctions(object):
 
         self.SAMWindow = SAMWindow()
 
+        ######################### 
+        # Semantic Segmentation #
+        #########################
+        
+        # MMSegmentation
         self.mmseg_config = 'dnn/configs/cgnet.py'
         self.mmseg_checkpoint = 'dnn/checkpoints/cgnet.pth'
-
+        # Segment Anything
         self.sam_checkpoint = 'dnn/checkpoints/sam_vit_h_4b8939.pth'
 
-        self.mmdet_config = 'dnn/configs/fasterrcnn_r50_rebarExposure_2x.py'
-        self.mmdet_checkpoint = 'dnn/checkpoints/fasterrcnn_r50_rebarExposure_2x.pth'
+        #################### 
+        # Object Detection #
+        ####################
 
+        # Crack
+        self.mmdet_crack_config = 'dnn/configs/fasterrcnn_r50_crack_2x.py'
+        self.mmdet_crack_checkpoint = 'dnn/checkpoints/fasterrcnn_r50_crack_2x.pth'
+        # Efflorescence
+        self.mmdet_efflorescence_config = 'dnn/configs/fasterrcnn_r50_efflorescence_2x.py'
+        self.mmdet_efflorescence_checkpoint = 'dnn/checkpoints/fasterrcnn_r50_efflorescence_2x.pth'
+        # Rebar Exposure
+        self.mmdet_rebarExposure_config = 'dnn/configs/fasterrcnn_r50_rebarExposure_2x.py'
+        self.mmdet_rebarExposure_checkpoint = 'dnn/checkpoints/fasterrcnn_r50_rebarExposure_2x.pth'
+        # Spalling
+        self.mmdet_spalling_config = 'dnn/configs/fasterrcnn_r50_spalling_2x.py'
+        self.mmdet_spalling_checkpoint = 'dnn/checkpoints/fasterrcnn_r50_spalling_2x.pth'
+        
+        ##############
+        # Attributes #
+        ##############
+        
         self.scale = 1.0
 
     
@@ -167,13 +190,14 @@ class DNNFunctions(object):
         self.mmdet_model = init_detector(config_file, checkpoint_file, device='cpu')
 
 
-    def inference_mmdet(self, img):
+    def inference_mmdet(self, img, model):
         """
         Inference the image with the mmseg model
 
         Args:
             img (np.ndarray): The image to be processed.
-            
+            model: mmdetection model
+
         Returns:
             bboxes (np.ndarray): The processed bboxes.
             scores (np.ndarray): The processed scores.
@@ -181,7 +205,7 @@ class DNNFunctions(object):
 
         img = self.cvtRGBATORGB(img)
         
-        result = inference_detector(self.mmdet_model, img)
+        result = inference_detector(model, img)
 
         bboxes = result.pred_instances.bboxes.cpu().numpy()
         bboxes = np.squeeze(bboxes)

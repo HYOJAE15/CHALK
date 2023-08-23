@@ -848,7 +848,6 @@ class ImageFunctions(DNNFunctions):
     def inferenceFullyAutomaticLabeling (self):
         """
         Fully-Automatic Image Labeling 
-        (Double Image Processing)
         """
         damage = [
             "Background",
@@ -858,97 +857,115 @@ class ImageFunctions(DNNFunctions):
             "Spalling"
             ]
 
+        # for GUI Image Viewer
         palette = [
-                   (0, 0, 0, 0),
-                   (255, 0, 0, 255),  
-                   (0, 255, 0, 255), 
-                   (255, 255, 0, 255), 
-                   (0, 0, 255, 255)
-                   ]
-        
-        palette_blend = np.array([[0, 0, 0],
-               [255, 0, 0],
-               [0, 255, 0],
-               [0, 255, 255], 
-               [255, 0, 0]])
+            (0, 0, 0, 0),
+            (255, 0, 0, 255),  
+            (0, 255, 0, 255), 
+            (255, 255, 0, 255), 
+            (0, 0, 255, 255)
+        ]
+        # for Saving Processed Image
+        palette_rec = [
+            (0, 0, 0),
+            (0, 0, 255),
+            (0, 255, 0), 
+            (0, 255, 255), 
+            (255, 0, 0)
+        ]
 
         
         damage_name = damage[self.brush_class]
         damage_color = palette[self.brush_class]
+        rec_color = palette_rec[self.brush_class]
         
-        #############################
-        # 1. First Image Processing #
-        #############################
+        #######################################
+        #      1. First Image Processing      #
+        # : Object Detecton (by Faster R-CNN) #
+        #######################################
 
-        # 균열
+        """
+        Load Object Detection model
+        """
+        # Crack
         if self.brush_class == 1 :
-            if hasattr(self, 'mmseg_model') == False :
-                self.load_mmseg(self.mmseg_config, self.mmseg_checkpoint)
-            print(f"crack")
+            self.load_mmdet(self.mmdet_crack_config, self.mmdet_crack_checkpoint)
         
-        # 면적형 손상
-        # 손상 종류에 따라 모델 로딩 필요
-        # 손상 종류에 맞는 Detection 모델 로딩, SAM 로딩
-        elif self.brush_class != 0 and self.brush_class != 1 :
-            if hasattr(self, 'mmdet_model') == False :
-                self.load_mmdet(self.mmdet_config, self.mmdet_checkpoint)
-            
-            img = cvtPixmapToArray(self.pixmap)
-            img = img[:, :, :3]
-
-            bboxes, scores = self.inference_mmdet(img)
-
-            box_list = []
-            thr = 0.6
-            for box, score in zip(bboxes, scores):
-                if score > thr:
-                    box_list.append([box, float(score)])
-
-            # _colormap = copy.deepcopy(self.colormap)
-    
-            # for box in box_list:    
-            #     coord = box[0]
-            #     pred_score = box[1]
-
-            #     min_x, min_y, max_x, max_y = getScaledPoint_mmdet(coord, scale = 1)
-                
-            #     _colormap = cv2.rectangle(_colormap, (min_x, min_y), (max_x, max_y), damage_color, 3)
-                
-            #     pred_score = round(float(pred_score), 3) 
-            #     text = f"{damage_name}: {pred_score}"
-            #     text_position = (min_x, min_y-10)
-            #     font = cv2.FONT_HERSHEY_SIMPLEX
-            #     font_scale = 1.0
-            #     font_color = damage_color
-            #     thickness = 2
-            #     line_type = cv2.LINE_AA
-            #     bottomLeftOrigin = False
-            #     cv2.putText(_colormap, text, text_position, font, font_scale, font_color, thickness, line_type, bottomLeftOrigin)
-
-            
-            # self.color_pixmap = QPixmap(cvtArrayToQImage(_colormap))
-            # self.color_pixmap_item.setPixmap(QPixmap())
-            # self.color_pixmap_item.setPixmap(self.color_pixmap)
+        # Efflorescence
+        elif self.brush_class == 2 :
+            self.load_mmdet(self.mmdet_efflorescence_config, self.mmdet_efflorescence_checkpoint)
         
+        # Rebar-Exposure
+        elif self.brush_class == 3 :
+            self.load_mmdet(self.mmdet_rebarExposure_config, self.mmdet_rebarExposure_checkpoint)
+        
+        # Spalling
+        elif self.brush_class == 4 :
+            self.load_mmdet(self.mmdet_spalling_config, self.mmdet_spalling_checkpoint)
+        
+        """
+        Inference Image
+        """
+        img = cvtPixmapToArray(self.pixmap)
+        img = img[:, :, :3]
+        bboxes, scores = self.inference_mmdet(img, model=self.mmdet_model)
+        thr = 0.6
+        box_list = []
+        
+        for box, score in zip(bboxes, scores):
+            if score > thr:
+                box_list.append([box, float(score)])
+        
+        """
+        First Image Processing 이미지 저장을 위한 루프
+        """
+        bbox_colormap = blendImageWithColorMap(img, self.label)
+        
+        for box in box_list:    
+            coord = box[0]
+            pred_score = box[1]
+
+            min_x, min_y, max_x, max_y = getScaledPoint_mmdet(coord, scale = 1)
+            
+            bbox_colormap = cv2.rectangle(bbox_colormap, (min_x, min_y), (max_x, max_y), rec_color, 3)
+            
+            pred_score = round(float(pred_score), 3) 
+            text = f"{damage_name}: {pred_score}"
+            text_position = (min_x, min_y-10)
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            font_scale = 0.5
+            font_color = rec_color
+            thickness = 1
+            line_type = cv2.LINE_AA
+            bottomLeftOrigin = False
+            cv2.putText(bbox_colormap, text, text_position, font, font_scale, font_color, thickness, line_type, bottomLeftOrigin)
+        
+        bbox_colormap_path = os.path.dirname(self.labelPath)
+        bbox_colormapName = os.path.basename(self.labelPath)
+        bbox_colormap_path = os.path.dirname(bbox_colormap_path)
+        bbox_colormap_path = os.path.dirname(bbox_colormap_path)
+        bbox_colormap_path = os.path.join(bbox_colormap_path, "00. first_imageProcessing_colormap")
+        os.makedirs(bbox_colormap_path, exist_ok=True)
+        bbox_colormap_path = os.path.join(bbox_colormap_path, bbox_colormapName)
+
+        imwrite_colormap(bbox_colormap_path, bbox_colormap)
+            
         #################################################
-        # 2. Second Image Processing (Segment Anything) #
+        #           2. Second Image Processing          #
+        # : Semantic Segmentation (by Segment Anything) #
         #################################################
+        """
+        Load Segment Anything model
+        """
         if hasattr(self, 'sam_model') == False :
             self.load_sam(self.sam_checkpoint)
             print(f"load sam")
-
+        
+        """
+        Inference Image
+        """
         self.sam_predictor.set_image(img)
-        print(f"set image")
-        
-
-        # # # save min_x, min_y, max_x, max_y for SAM
-        # # self.sam_min_x = min_x
-        # # self.sam_min_y = min_y
-        # # self.sam_max_x = max_x
-        # # self.sam_max_y = max_y
-        
-        
-
+        print(f"set image")    
         for box in box_list :
             coord = box[0]
             pred_score = box[1]
@@ -959,8 +976,6 @@ class ImageFunctions(DNNFunctions):
                         box=bbox,
                         multimask_output=True
                     )
-            
-            
             mask = masks[np.argmax(scores), :, :]
             # self.sam_mask_input = logits[np.argmax(scores), :, :]
 
@@ -968,17 +983,13 @@ class ImageFunctions(DNNFunctions):
             idx = np.argwhere(mask == 1)
             y_idx, x_idx = idx[:, 0], idx[:, 1]
             
-            
-            # self.sam_y_idx = y_idx
-            # self.sam_x_idx = x_idx
-            
             self.updateColorMap()
             self.label[y_idx, x_idx] = self.brush_class
             self.colormap[y_idx, x_idx, :3] = self.label_palette[self.brush_class]
-
-            # _colormap = copy.deepcopy(self.colormap)
-            # cv2.rectangle(_colormap, (self.sam_rec_min_x, self.sam_rec_min_y), (self.sam_rec_max_x, self.sam_rec_max_y), (255, 255, 255, 255), 3)
-
+        
+        """
+        GUI Image viewer를 위한 루프
+        """
         self.FAL_colormap = copy.deepcopy(self.colormap)
 
         for box in box_list :
@@ -1000,18 +1011,15 @@ class ImageFunctions(DNNFunctions):
             bottomLeftOrigin = False
             cv2.putText(self.FAL_colormap, text, text_position, font, font_scale, font_color, thickness, line_type, bottomLeftOrigin)
 
+        self.color_pixmap = QPixmap(cvtArrayToQImage(self.FAL_colormap))
+        self.color_pixmap_item.setPixmap(QPixmap())
+        self.color_pixmap_item.setPixmap(self.color_pixmap)
         print(f"complete sam")
-        
-        colormapPath = os.path.dirname(self.labelPath)
-        colormapName = os.path.basename(self.labelPath)
-        colormapPath = os.path.dirname(colormapPath)
-        colormapPath = os.path.dirname(colormapPath)
-        colormapPath = os.path.join(colormapPath, "colormap")
-        os.makedirs(colormapPath, exist_ok=True)
-        colormapPath = os.path.join(colormapPath, colormapName)
 
-
-        sam_colormap = blendImageWithColorMap(img, self.label, palette_blend, 0.5)
+        """
+        Second Image Processing 이미지 저장을 위한 루프
+        """
+        sam_colormap = blendImageWithColorMap(img, self.label) 
 
         for box in box_list :
             coord = box[0]
@@ -1019,32 +1027,28 @@ class ImageFunctions(DNNFunctions):
                 
             min_x, min_y, max_x, max_y = getScaledPoint_mmdet(coord, scale = 1)
                 
-            sam_colormap = cv2.rectangle(sam_colormap, (min_x, min_y), (max_x, max_y), (0, 255, 255), 3)
+            sam_colormap = cv2.rectangle(sam_colormap, (min_x, min_y), (max_x, max_y), rec_color, 3)
                 
             pred_score = round(float(pred_score), 3) 
             text = f"{damage_name}: {pred_score}"
             text_position = (min_x, min_y-10)
             font = cv2.FONT_HERSHEY_SIMPLEX
             font_scale = 0.5
-            font_color = (0, 255, 255)
+            font_color = rec_color
             thickness = 1
             line_type = cv2.LINE_AA
             bottomLeftOrigin = False
             cv2.putText(sam_colormap, text, text_position, font, font_scale, font_color, thickness, line_type, bottomLeftOrigin)
 
+        colormapPath = os.path.dirname(self.labelPath)
+        colormapName = os.path.basename(self.labelPath)
+        colormapPath = os.path.dirname(colormapPath)
+        colormapPath = os.path.dirname(colormapPath)
+        colormapPath = os.path.join(colormapPath, "01. second_imageProcessing_colormap")
+        os.makedirs(colormapPath, exist_ok=True)
+        colormapPath = os.path.join(colormapPath, colormapName)
+
         imwrite_colormap(colormapPath, sam_colormap)
-
-        self.color_pixmap = QPixmap(cvtArrayToQImage(self.FAL_colormap))
-        self.color_pixmap_item.setPixmap(QPixmap())
-        self.color_pixmap_item.setPixmap(self.color_pixmap)
-
-            
-        # self.color_pixmap = QPixmap(cvtArrayToQImage(self.colormap))
-        # self.color_pixmap_item.setPixmap(QPixmap())
-        # self.color_pixmap_item.setPixmap(self.color_pixmap)
-                    
-        
-            
 
     def startOrEndSAM(self):
 
