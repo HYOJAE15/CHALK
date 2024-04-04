@@ -200,9 +200,13 @@ class MainWindow(
         elif event.key() == 16777249: # Ctrl key
             self.ControlKey = True
 
+        # elif event.key() == 16777251: # alt key
+        #     self.AltKey = True
+        #     print("alt-true")
+
         elif event.key() == 83: # S key 
             if self.ControlKey:
-                if self.use_autolabel == True and self.brush_class != 1 and self.brush_class != 0:
+                if self.use_autolabel == True and self.brush_class != 0:
                     print("END_SAM")
                     self.startOrEndSAM()
                 imwrite(self.labelPath, self.label) 
@@ -224,6 +228,10 @@ class MainWindow(
         # zoom
         if event.key() == 16777249: # ctrl key
             self.ControlKey = False
+
+        # elif event.key() == 16777251: # alt key
+        #     self.AltKey = False
+        #     print("alt-flase")
 
         elif event.key() == 72: # H key
             # deactivate scroll move mode 

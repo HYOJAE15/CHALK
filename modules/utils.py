@@ -16,11 +16,13 @@ import math
 import csv
 
 
-def imread(path: str) -> np.array:
+def imread(path: str, checkImg: bool=True) -> np.array:
     img = cv2.imdecode(np.fromfile(path, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
 
-    if img.ndim == 3 : 
+    # if img.ndim == 3 : 
+    if checkImg :
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) 
+    
     return img
 
 def imwrite(path:str,
@@ -114,6 +116,12 @@ def convertLabelToColorMap(
 
     colormap = np.zeros((label.shape[0], label.shape[1], 4), dtype=np.uint8)
     colormap = mapLabelToColorMap(label, colormap, palette)
+     
+    for x in range(label.shape[0]):
+        for y in range(label.shape[1]):
+            if any(colormap[x, y, :3]) != 0:
+                colormap[x, y, 3] = alpha
+    
     colormap[:, :, 3] = alpha
 
     return colormap

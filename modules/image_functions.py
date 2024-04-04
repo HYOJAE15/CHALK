@@ -82,10 +82,11 @@ class ImageFunctions(DNNFunctions):
             
         mainWidgets.treeView.clicked.connect(self.openImage)
         self.fileModel = QFileSystemModel()
-        self.alpha = 50
+        self.alpha = 85
         self.scale = 1
         self.oldPos = None
         self.brush_class = 1
+        # self.AltKey = False
         
         mainWidgets.mainImageViewer.mouseMoveEvent = self._mouseMoveEvent
         mainWidgets.mainImageViewer.mousePressEvent = self._mousePressPoint
@@ -266,6 +267,7 @@ class ImageFunctions(DNNFunctions):
                 self.BrushMenu.close()  
 
 
+            # if self.brush_class != 0:
             if self.brush_class == 1:
                 if hasattr(self, 'mmseg_model') == False :
                     self.load_mmseg(self.mmseg_config, self.mmseg_checkpoint)
@@ -427,7 +429,7 @@ class ImageFunctions(DNNFunctions):
             self.labelPath = self.labelPath.replace( '_leftImg8bit.png', '_gtFine_labelIds.png')
             self.pixmap = readImageToPixmap(self.imgPath)        
             
-            self.label = imread(self.labelPath)
+            self.label = imread(self.labelPath, checkImg=False)
             
             self.colormap = convertLabelToColorMap(self.label, self.label_palette, self.alpha)
             self.color_pixmap = QPixmap(cvtArrayToQImage(self.colormap))
@@ -528,7 +530,7 @@ class ImageFunctions(DNNFunctions):
 
             _colormap = copy.deepcopy(self.colormap)
             
-            _colormap = cv2.rectangle(_colormap, (min_x, min_y), (max_x, max_y), (255, 255, 255, 255), 3)
+            _colormap = cv2.rectangle(_colormap, (min_x, min_y), (max_x, max_y), (255, 255, 255, 255), 15)
 
             self.rect_min_x = min_x
             self.rect_max_x = max_x
@@ -699,7 +701,58 @@ class ImageFunctions(DNNFunctions):
 
         self.fixed_x = x
         self.fixed_y = y 
+
+        # self.input_label_list = []
+        # self.input_point_list = []
+
+        # self.input_point_list.append([x, y])
         
+        # if self.AltKey == True:
+        #     # if mouse left click
+        #     if event.button() == Qt.LeftButton:
+        #         self.input_label_list.append(1)
+                
+        #         cv2.circle(self.colormap, (x, y), 30, (255, 0, 0, 255), 3)
+        #         cv2.circle(self.colormap, (x, y), 5, (255, 255, 255, 255), -1)
+
+        #     # if mouse right click
+        #     elif event.button() == Qt.RightButton:
+        #         self.input_label_list.append(0)
+                
+        #         half_side = 30
+        #         vertices = [
+        #                         (int(x - half_side), int(y + half_side * np.sqrt(3) / 3)),
+        #                         (int(x), int(y - 2 * half_side * np.sqrt(3) / 3)),
+        #                         (int(x + half_side), int(y + half_side * np.sqrt(3) / 3))
+        #                     ]
+                
+        #         cv2.circle(self.colormap, (x, y), 5, (255, 255, 255, 255), -1)
+        #         cv2.line(self.colormap, vertices[0], vertices[1], (0, 0, 255, 255), 3)
+        #         cv2.line(self.colormap, vertices[1], vertices[2], (0, 0, 255, 255), 3)
+        #         cv2.line(self.colormap, vertices[2], vertices[0], (0, 0, 255, 255), 3)
+            
+
+        #     latest_label = self.input_label_list[-1]
+        #     latest_point = self.input_point_list[-1]
+        #     sam_ROI = [0, 0, 0, 0]
+
+        #     self.color_pixmap = QPixmap(cvtArrayToQImage(self.colormap))
+        #     self.color_pixmap_item.setPixmap(QPixmap())
+        #     self.color_pixmap_item.setPixmap(self.color_pixmap)
+
+        #     csv_dirname = os.path.dirname(self.labelPath)
+        #     csv_dirname = os.path.dirname(csv_dirname)
+        #     csv_dirname = os.path.dirname(csv_dirname)
+        #     csv_dirname = os.path.join(csv_dirname, "Coordinate")
+        #     os.makedirs(csv_dirname, exist_ok=True)
+            
+        #     csv_filename = os.path.basename(self.labelPath)
+        #     csv_filename = csv_filename.replace("_gtFine_labelIds.png", ".csv")
+            
+        #     csv_path = os.path.join(csv_dirname, csv_filename)
+        #     OR_rect = np.zeros(self.label.shape)
+
+        #     getPrompt(sam_ROI, latest_point, latest_label, csv_path, OR_rect)
 
     def inferenceSinglePoint(self, event):
 
@@ -763,10 +816,17 @@ class ImageFunctions(DNNFunctions):
         # if mouse left click
         if event.button() == Qt.LeftButton:
             self.input_label_list.append(1)
+            
+            left = True
+            right = False          
+        
         # if mouse right click
         elif event.button() == Qt.RightButton:
             self.input_label_list.append(0)
 
+            left = False
+            right = True
+        
         input_point = np.array(self.input_point_list)
         input_label = np.array(self.input_label_list)
         
@@ -816,7 +876,24 @@ class ImageFunctions(DNNFunctions):
         self.colormap[y_idx, x_idx, :3] = self.label_palette[self.brush_class]
 
         _colormap = copy.deepcopy(self.colormap)
-        cv2.rectangle(_colormap, (self.sam_rec_min_x, self.sam_rec_min_y), (self.sam_rec_max_x, self.sam_rec_max_y), (255, 255, 255, 255), 3)
+        cv2.rectangle(_colormap, (self.sam_rec_min_x, self.sam_rec_min_y), (self.sam_rec_max_x, self.sam_rec_max_y), (255, 255, 255, 255), 15)
+
+        if left :
+            cv2.circle(_colormap, (self.x, self.y), 50, (255, 0, 0, 255), 9)
+            cv2.circle(_colormap, (self.x, self.y), 9, (255, 255, 255, 255), -1)
+        elif right :
+            half_side = 50
+            vertices = [
+                            (int(self.x - half_side), int(self.y + half_side * np.sqrt(3) / 3)),
+                            (int(self.x), int(self.y - 2 * half_side * np.sqrt(3) / 3)),
+                            (int(self.x + half_side), int(self.y + half_side * np.sqrt(3) / 3))
+                        ]
+            
+            cv2.circle(_colormap, (self.x, self.y), 9, (255, 255, 255, 255), -1)
+            cv2.line(_colormap, vertices[0], vertices[1], (0, 0, 255, 255), 9)
+            cv2.line(_colormap, vertices[1], vertices[2], (0, 0, 255, 255), 9)
+            cv2.line(_colormap, vertices[2], vertices[0], (0, 0, 255, 255), 9)
+        
 
         
         self.color_pixmap = QPixmap(cvtArrayToQImage(_colormap))
@@ -825,25 +902,25 @@ class ImageFunctions(DNNFunctions):
 
 
         # Save the prompt for comparative experiment
-        sam_ROI = [self.sam_rec_min_x, self.sam_rec_min_y, self.sam_rec_max_x, self.sam_rec_max_y]
+        # sam_ROI = [self.sam_rec_min_x, self.sam_rec_min_y, self.sam_rec_max_x, self.sam_rec_max_y]
         
-        latest_point = self.input_point_list[-1]
-        latest_label = self.input_label_list[-1]
+        # latest_point = self.input_point_list[-1]
+        # latest_label = self.input_label_list[-1]
 
-        csv_dirname = os.path.dirname(self.labelPath)
-        csv_dirname = os.path.dirname(csv_dirname)
-        csv_dirname = os.path.dirname(csv_dirname)
-        csv_dirname = os.path.join(csv_dirname, "Coordinate_SAM")
-        os.makedirs(csv_dirname, exist_ok=True)
+        # csv_dirname = os.path.dirname(self.labelPath)
+        # csv_dirname = os.path.dirname(csv_dirname)
+        # csv_dirname = os.path.dirname(csv_dirname)
+        # csv_dirname = os.path.join(csv_dirname, "Coordinate_SAM")
+        # os.makedirs(csv_dirname, exist_ok=True)
 
-        csv_filename = os.path.basename(self.labelPath)
-        csv_filename = csv_filename.replace("_gtFine_labelIds.png", ".csv")
+        # csv_filename = os.path.basename(self.labelPath)
+        # csv_filename = csv_filename.replace("_gtFine_labelIds.png", ".csv")
 
-        csv_path = os.path.join(csv_dirname, csv_filename)
+        # csv_path = os.path.join(csv_dirname, csv_filename)
 
-        OR_rect = np.zeros(self.label.shape)
+        # OR_rect = np.zeros(self.label.shape)
 
-        getPrompt(sam_ROI, latest_point, latest_label, csv_path, OR_rect)
+        # getPrompt(sam_ROI, latest_point, latest_label, csv_path, OR_rect)
 
     def inferenceFullyAutomaticLabeling (self):
         """
