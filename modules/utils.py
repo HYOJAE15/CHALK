@@ -116,12 +116,6 @@ def convertLabelToColorMap(
 
     colormap = np.zeros((label.shape[0], label.shape[1], 4), dtype=np.uint8)
     colormap = mapLabelToColorMap(label, colormap, palette)
-     
-    for x in range(label.shape[0]):
-        for y in range(label.shape[1]):
-            if any(colormap[x, y, :3]) != 0:
-                colormap[x, y, 3] = alpha
-    
     colormap[:, :, 3] = alpha
 
     return colormap
