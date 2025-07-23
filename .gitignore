@@ -10,3 +10,4 @@
 build/*
 dist/*
 testImage/*
+CHALK.egg-info/*
